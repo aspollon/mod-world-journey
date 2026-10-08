@@ -1,0 +1,39 @@
+###################################################################################################
+# mod-world-journey
+#
+# The classes of Conquest of Azeroth end at level 60. This module makes the whole world - the old
+# world, Outland and Northrend - one journey from 1 to 60:
+#
+#     the old world    zones open from  1 to 35 (instead of 1 to 55)
+#     Outland          zones open from 30 to 43 (instead of 58 to 67)
+#     Northrend        zones open from 40 to 55 (instead of 68 to 77)
+#     the raids and heroic dungeons of Outland and Northrend: at 60, after those of the old world
+#
+# Every zone stays open until 60: the scaling of CoA lifts what is below a character to that
+# character, as it always does. Creatures, quests, items, riding and the professions, instances,
+# the Dungeon Finder and the battlegrounds follow the journey; the classes stay as CoA made them.
+#
+# At every start, before the world reads its data, the world database is set to the journey. The
+# originals are kept in tables of the module (journey_creature, journey_quest, journey_item,
+# journey_trainer_spell, journey_battleground); a value that an update of the database changes is
+# taken as the new original. Switched off, the module puts every original back at the next start.
+###################################################################################################
+
+[worldserver]
+
+#
+#    Journey.Enable
+#        Description: The world is one journey from 1 to 60. Switched off, the world database gets
+#                     its original values back at the next start.
+#        Default:     1 - Enabled
+#                     0 - Disabled
+
+Journey.Enable = 1
+
+#
+#    Journey.Debug
+#        Description: More detail in the log: every spell the module scales, and by how much.
+#        Default:     0 - Disabled
+#                     1 - Enabled
+
+Journey.Debug = 0

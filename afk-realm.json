@@ -1,8 +1,415 @@
 {
-  "about": "Read by AFK Realm (https://github.com/aspollon/AFK-Realm) when it builds the server. Without AFK Realm, set these values by hand: see README.md.",
+  "about": "Read by AFK Realm (https://github.com/aspollon/AFK-Realm) when it builds the server. Without AFK Realm, set these values by hand and copy the addon into the client: see README.md.",
   "patches": [],
   "settings": [
-    { "file": "worldserver.conf", "key": "MaxPlayerLevel", "value": "60", "why": "The journey of this module ends at 60, where the classes of Conquest of Azeroth end." },
-    { "file": "playerbots.conf", "key": "AiPlayerbot.RandomBotMaxLevel", "value": "60", "why": "Random bots end at 60 like the players; they follow the journey through Outland and Northrend by the levels of the creatures." }
-  ]
+    {
+      "file": "worldserver.conf",
+      "key": "MaxPlayerLevel",
+      "value": "60",
+      "why": "The journey ends at 60, where the classes of Conquest of Azeroth end."
+    },
+    {
+      "file": "worldserver.conf",
+      "key": "DungeonFinder.MaxExpansion",
+      "value": "2",
+      "why": "The Dungeon Finder offers the dungeons of Outland and Northrend too: they are part of the journey."
+    },
+    {
+      "file": "worldserver.conf",
+      "key": "Wintergrasp.PlayerMinLvl",
+      "value": "60",
+      "why": "Wintergrasp opens at the end of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.RandomBotMaxLevel",
+      "value": "60",
+      "why": "Random bots end at 60 like the players."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.UseGroundMountAtMinLevel",
+      "value": "13",
+      "why": "Riding follows the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.UseFastGroundMountAtMinLevel",
+      "value": "26",
+      "why": "Riding follows the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.UseFlyMountAtMinLevel",
+      "value": "33",
+      "why": "Flying follows the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.UseFastFlyMountAtMinLevel",
+      "value": "47",
+      "why": "Flying follows the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.1",
+      "value": "4,8",
+      "why": "Random bots go to Dun Morogh at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.12",
+      "value": "4,8",
+      "why": "Random bots go to Elwynn Forest at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.14",
+      "value": "4,8",
+      "why": "Random bots go to Durotar at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.85",
+      "value": "4,8",
+      "why": "Random bots go to Tirisfal Glades at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.141",
+      "value": "4,8",
+      "why": "Random bots go to Teldrassil at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.215",
+      "value": "4,8",
+      "why": "Random bots go to Mulgore at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3430",
+      "value": "4,8",
+      "why": "Random bots go to Eversong Woods at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3524",
+      "value": "4,8",
+      "why": "Random bots go to Azuremyst Isle at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.17",
+      "value": "7,16",
+      "why": "Random bots go to Barrens at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.38",
+      "value": "7,13",
+      "why": "Random bots go to Loch Modan at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.40",
+      "value": "7,14",
+      "why": "Random bots go to Westfall at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.130",
+      "value": "7,15",
+      "why": "Random bots go to Silverpine Forest at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.148",
+      "value": "7,14",
+      "why": "Random bots go to Darkshore at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3433",
+      "value": "7,14",
+      "why": "Random bots go to Ghostlands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3525",
+      "value": "7,14",
+      "why": "Random bots go to Bloodmyst Isle at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.10",
+      "value": "12,21",
+      "why": "Random bots go to Duskwood at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.11",
+      "value": "14,19",
+      "why": "Random bots go to Wetlands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.44",
+      "value": "10,18",
+      "why": "Random bots go to Redridge Mountains at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.267",
+      "value": "13,22",
+      "why": "Random bots go to Hillsbrad Foothills at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.331",
+      "value": "12,21",
+      "why": "Random bots go to Ashenvale at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.400",
+      "value": "15,23",
+      "why": "Random bots go to Thousand Needles at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.406",
+      "value": "10,19",
+      "why": "Random bots go to Stonetalon Mountains at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3",
+      "value": "23,29",
+      "why": "Random bots go to Badlands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.8",
+      "value": "23,29",
+      "why": "Random bots go to Swamp of Sorrows at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.15",
+      "value": "22,29",
+      "why": "Random bots go to Dustwallow Marsh at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.16",
+      "value": "29,33",
+      "why": "Random bots go to Azshara at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.33",
+      "value": "21,30",
+      "why": "Random bots go to Stranglethorn Vale at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.45",
+      "value": "19,27",
+      "why": "Random bots go to Arathi Highlands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.47",
+      "value": "27,32",
+      "why": "Random bots go to Hinterlands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.51",
+      "value": "29,32",
+      "why": "Random bots go to Searing Gorge at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.357",
+      "value": "26,33",
+      "why": "Random bots go to Feralas at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.405",
+      "value": "19,26",
+      "why": "Random bots go to Desolace at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.440",
+      "value": "26,33",
+      "why": "Random bots go to Tanaris at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.4",
+      "value": "33,36",
+      "why": "Random bots go to Blasted Lands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.28",
+      "value": "32,38",
+      "why": "Random bots go to Western Plaguelands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.46",
+      "value": "32,38",
+      "why": "Random bots go to Burning Steppes at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.139",
+      "value": "34,39",
+      "why": "Random bots go to Eastern Plaguelands at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.361",
+      "value": "30,36",
+      "why": "Random bots go to Felwood at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.490",
+      "value": "31,36",
+      "why": "Random bots go to Un'Goro Crater at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.618",
+      "value": "34,39",
+      "why": "Random bots go to Winterspring at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.1377",
+      "value": "34,40",
+      "why": "Random bots go to Silithus at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3483",
+      "value": "30,42",
+      "why": "Random bots go to Hellfire Peninsula at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3518",
+      "value": "39,47",
+      "why": "Random bots go to Nagrand at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3519",
+      "value": "36,52",
+      "why": "Random bots go to Terokkar Forest at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3520",
+      "value": "42,52",
+      "why": "Random bots go to Shadowmoon Valley at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3521",
+      "value": "33,43",
+      "why": "Random bots go to Zangarmarsh at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3522",
+      "value": "39,52",
+      "why": "Random bots go to Blade's Edge Mountains at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3523",
+      "value": "43,52",
+      "why": "Random bots go to Netherstorm at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.4080",
+      "value": "55,60",
+      "why": "Random bots go to Isle of Quel'Danas at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.65",
+      "value": "45,55",
+      "why": "Random bots go to Dragonblight at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.66",
+      "value": "50,60",
+      "why": "Random bots go to Zul'Drak at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.67",
+      "value": "55,60",
+      "why": "Random bots go to Storm Peaks at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.210",
+      "value": "55,60",
+      "why": "Random bots go to Icecrown Glacier at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.394",
+      "value": "47,57",
+      "why": "Random bots go to Grizzly Hills at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.495",
+      "value": "40,50",
+      "why": "Random bots go to Howling Fjord at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.2817",
+      "value": "55,60",
+      "why": "Random bots go to Crystalsong Forest at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3537",
+      "value": "40,52",
+      "why": "Random bots go to Borean Tundra at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.3711",
+      "value": "52,60",
+      "why": "Random bots go to Sholazar Basin at the levels of the journey."
+    },
+    {
+      "file": "playerbots.conf",
+      "key": "AiPlayerbot.ZoneBracket.4197",
+      "value": "58,60",
+      "why": "Random bots go to Wintergrasp at the levels of the journey."
+    }
+  ],
+  "client": {
+    "addons": [
+      "client/AddOns/ZoneLevels"
+    ],
+    "clearCache": true,
+    "why": "The world map shows the zone levels of the journey; the cache of the client forgets the old levels of items, creatures and quests."
+  }
 }

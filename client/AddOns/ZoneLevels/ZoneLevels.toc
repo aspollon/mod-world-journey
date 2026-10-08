@@ -1,0 +1,6 @@
+## Interface: 30300
+## Title: Zone Levels
+## Notes: The world map shows the zone levels of the journey from 1 to 60.
+## Author: mod-world-journey
+## Version: 1
+ZoneLevels.lua

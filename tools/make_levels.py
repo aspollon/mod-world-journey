@@ -1,10 +1,15 @@
 #!/usr/bin/env python3
-"""Builds data/zones.csv and data/instances.csv - the one table the module plays by - from the original data:
-the zone ranges of the CoA client (Interface/FrameXML/Data/Maps.lua) and the instance entry levels and creature
-levels of the CoA world database. The journey from 1 to 60 is compressed so that it runs naturally through the old
-world, Outland and Northrend; the order within each part stays as it was."""
-import csv, os
-here = os.path.dirname(os.path.abspath(__file__)); data = os.path.join(here, '..', 'data')
+"""Builds everything the module takes from the journey table, from the original data: the zone ranges of the CoA
+client (Interface/FrameXML/Data/Maps.lua), the instance entry levels and creature levels of the CoA world database and
+the default zone brackets of the random bots. The journey from 1 to 60 is compressed so that it runs naturally through
+the old world, Outland and Northrend; the order within each part stays as it was.
+
+Writes data/zones.csv, data/instances.csv, src/JourneyInstances.h, the world map addon for the client and afk-realm.json."""
+import csv, json, os
+here = os.path.dirname(os.path.abspath(__file__)); root = os.path.join(here, '..'); data = os.path.join(root, 'data')
+MODULE = 'mod-world-journey'       # the name of the module (its folder and repository)
+ADDON = 'ZoneLevels'               # the name of its addon in the client
+TITLE = 'Zone Levels'               # how the addon is shown in the client
 
 def classic(level):      # old world entries 1..55 -> 1..35
     return max(1, round(1 + (level - 1) * 34 / 54))
@@ -59,10 +64,60 @@ with open(os.path.join(data, 'instances.csv'), 'w', newline='') as f:
 print(len(open(os.path.join(data, 'zones.csv')).readlines()) - 1, 'zones,', len(rows), 'instance entries')
 
 # The entry levels of the instances, built into the module.
-with open(os.path.join(here, '..', 'src', 'AsInstances.h'), 'w') as f:
+with open(os.path.join(here, '..', 'src', 'JourneyInstances.h'), 'w') as f:
     f.write('// Built by tools/make_levels.py from data/instances.csv - do not edit by hand.\n#pragma once\n\n')
-    f.write('struct AsInstanceEntry { unsigned map; unsigned difficulty; unsigned entry; };\n\n')
-    f.write('static AsInstanceEntry const AsInstances[] =\n{\n')
+    f.write('struct JourneyInstance { unsigned map; unsigned difficulty; unsigned entry; };\n\n')
+    f.write('static JourneyInstance const JourneyInstances[] =\n{\n')
     for r in rows:
         f.write(f'    {{ {r[0]}, {r[1]}, {r[5]} }},     // {r[2]}\n')
     f.write('};\n')
+
+# ------------------------------------------------------------------------------------------ the world map of the client
+# The client shows the level range of a zone from WORLD_MAP_LEVELS (Interface/FrameXML/Data/Maps.lua). The addon puts
+# the journey's ranges there; nothing else of the client is touched.
+zones = list(csv.DictReader(open(os.path.join(data, 'zones.csv'))))
+addon = os.path.join(root, 'client', 'AddOns', ADDON)
+os.makedirs(addon, exist_ok=True)
+with open(os.path.join(addon, ADDON + '.toc'), 'w', newline='\r\n') as f:
+    f.write(f"## Interface: 30300\n## Title: {TITLE}\n## Notes: The world map shows the zone levels of the journey from 1 to 60.\n"
+            f"## Author: {MODULE}\n## Version: 1\n{ADDON}.lua\n")
+with open(os.path.join(addon, ADDON + '.lua'), 'w', newline='\r\n') as f:
+    f.write(f"-- {TITLE}: the world map shows the zone levels of the journey from 1 to 60.\n"
+            f"-- Built by tools/make_levels.py of {MODULE} - do not edit by hand.\n\n"
+            "if type(WORLD_MAP_LEVELS) ~= \"table\" then return end\n\n")
+    for z in zones:
+        f.write(f'WORLD_MAP_LEVELS["{z["zone"]}"] = {{ {z["entry"]}, {z["max"]} }}\n')
+
+# ------------------------------------------------------------------------------------------ AFK Realm
+def compress(level, era):
+    if era == 'tbc' and level >= 58: value = tbc(level)
+    elif era == 'wotlk' and level >= 68: value = min(wotlk(level), 60)
+    else: value = classic(level)
+    return max(1, min(60, value))
+
+settings = [
+    ('worldserver.conf', 'MaxPlayerLevel', '60', 'The journey ends at 60, where the classes of Conquest of Azeroth end.'),
+    ('worldserver.conf', 'DungeonFinder.MaxExpansion', '2', 'The Dungeon Finder offers the dungeons of Outland and Northrend too: they are part of the journey.'),
+    ('worldserver.conf', 'Wintergrasp.PlayerMinLvl', '60', 'Wintergrasp opens at the end of the journey.'),
+    ('playerbots.conf', 'AiPlayerbot.RandomBotMaxLevel', '60', 'Random bots end at 60 like the players.'),
+    ('playerbots.conf', 'AiPlayerbot.UseGroundMountAtMinLevel', str(classic(20)), 'Riding follows the journey.'),
+    ('playerbots.conf', 'AiPlayerbot.UseFastGroundMountAtMinLevel', str(classic(40)), 'Riding follows the journey.'),
+    ('playerbots.conf', 'AiPlayerbot.UseFlyMountAtMinLevel', str(tbc(60)), 'Flying follows the journey.'),
+    ('playerbots.conf', 'AiPlayerbot.UseFastFlyMountAtMinLevel', str(tbc(70)), 'Flying follows the journey.'),
+]
+for line in open(os.path.join(data, 'source_bot_zones.tsv')):
+    if line.startswith('#') or not line.strip(): continue
+    zone, lo, hi, era, name = line.rstrip('\n').split('\t')
+    lo, hi = compress(int(lo), era), compress(int(hi), era)
+    if zone == '4080': lo, hi = 55, 60          # the Isle of Quel'Danas: the last raid of Outland
+    settings.append(('playerbots.conf', f'AiPlayerbot.ZoneBracket.{zone}', f'{lo},{max(lo, hi)}', f'Random bots go to {name} at the levels of the journey.'))
+manifest = {
+    'about': 'Read by AFK Realm (https://github.com/aspollon/AFK-Realm) when it builds the server. Without AFK Realm, set these values by hand and copy the addon into the client: see README.md.',
+    'patches': [],
+    'settings': [{'file': f, 'key': k, 'value': v, 'why': w} for f, k, v, w in settings],
+    'client': {'addons': [f'client/AddOns/{ADDON}'], 'clearCache': True,
+               'why': 'The world map shows the zone levels of the journey; the cache of the client forgets the old levels of items, creatures and quests.'},
+}
+with open(os.path.join(root, 'afk-realm.json'), 'w', newline='\n') as f:
+    json.dump(manifest, f, indent=2); f.write('\n')
+print(len(zones), 'zones on the map,', len(settings), 'settings for AFK Realm')

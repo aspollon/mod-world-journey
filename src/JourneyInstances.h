@@ -1,9 +1,9 @@
 // Built by tools/make_levels.py from data/instances.csv - do not edit by hand.
 #pragma once
 
-struct AsInstanceEntry { unsigned map; unsigned difficulty; unsigned entry; };
+struct JourneyInstance { unsigned map; unsigned difficulty; unsigned entry; };
 
-static AsInstanceEntry const AsInstances[] =
+static JourneyInstance const JourneyInstances[] =
 {
     { 33, 0, 11 },     // Shadowfang Keep
     { 34, 0, 12 },     // Stormwind Stockades
