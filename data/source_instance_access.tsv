@@ -1,0 +1,121 @@
+33	0	14	0	Shadowfang Keep
+34	0	15	0	Stormwind Stockades
+36	0	10	0	Deadmines (DM)
+43	0	10	0	Wailing Caverns (WC)
+47	0	17	0	Razorfen Kraul
+48	0	19	0	Blackfathom Deeps
+70	0	30	0	Uldaman
+90	0	15	0	Gnomeregan
+109	0	35	0	Sunken Temple (of Atal'Hakkar)
+129	0	25	0	Razorfen Downs
+189	0	20	0	Scarlet Monastery (SM) - All wings
+209	0	35	0	Zul'Farrak (ZF)
+229	0	45	0	Blackrock Spire - Both Lower (LBRS) & Upper (UBRS) - 5/10man
+230	0	40	0	Blackrock Depths (BRD)
+249	0	80	0	Onyxia's Lair - 10man
+249	1	80	0	Onyxia's Lair - 25man
+269	0	66	0	Caverns Of Time: Black Morass/Opening the Dark Portal - Normal
+269	1	70	0	Caverns Of Time: Black Morass/Opening the Dark Portal - Heroic
+289	0	45	0	Scholomance
+309	0	50	0	Zul'Gurub (ZG) - 20man
+329	0	45	0	Stratholme
+349	0	30	0	Maraudon - All wings
+389	0	8	0	Ragefire Chasm (RF)
+409	0	50	0	Molten Core - 40man
+429	0	45	0	Dire Maul - All wings
+469	0	60	0	Blackwing Lair (BWL) - 40man
+509	0	50	0	Ahn'Qiraj Ruins (AQ20) - 20man
+531	0	50	0	Ahn'Qiraj Temple (AQ40) - 40man
+532	0	68	0	Karazhan - 10man
+533	0	80	0	Naxxramas - 10man
+533	1	80	0	Naxxramas
+534	0	70	0	Battle Of Mount Hyjal,Alliance Base
+540	0	55	0	The Shattered Halls
+540	1	70	0	The Shattered Halls
+542	0	55	0	The Blood Furnace
+542	1	70	0	The Blood Furnace
+543	0	55	0	Hellfire Ramparts
+543	1	70	0	Hellfire Ramparts
+544	0	65	0	Hellfire Citadel: Magtheridon's Lair - 25man
+545	0	55	0	The Steamvault
+545	1	70	0	The Steamvault
+546	0	55	0	The Underbog
+546	1	70	0	The Underbog
+547	0	55	0	The Slave Pens
+547	1	70	0	The Slave Pens
+548	0	68	0	Coilfang Reservoir: Serpentshrine Cavern - 25man
+550	0	70	0	The Eye
+552	0	68	0	The Arcatraz
+552	1	70	0	The Arcatraz
+553	0	67	0	The Botanica
+553	1	70	0	The Botanica
+554	0	67	0	The Mechanar
+554	1	70	0	The Mechanar
+555	0	65	0	Shadow Labyrinth
+555	1	70	0	Shadow Labyrinth
+556	0	55	0	Sethekk Halls
+556	1	70	0	Sethekk Halls
+557	0	55	0	Mana Tombs
+557	1	70	0	Mana Tombs
+558	0	55	0	Auchenai Crypts
+558	1	70	0	Auchenai Crypts
+560	0	64	0	Caverns Of Time: Old Hillsbrad Foothills/Escape from Durnholde - Normal
+560	1	70	0	Caverns Of Time: Old Hillsbrad Foothills/Escape from Durnholde - Heroic
+564	0	70	0	Black Temple
+565	0	70	0	Gruul's Lair
+568	0	70	0	Zul'Aman
+574	0	65	0	Utgarde Keep
+574	1	80	0	Utgarde Keep
+575	0	75	0	Utgarde Pinnacle
+575	1	80	0	Utgarde Pinnacle
+576	0	66	0	The Nexus
+576	1	80	0	The Nexus
+578	0	75	0	The Oculus
+578	1	80	0	The Oculus
+580	0	70	0	Sunwell Plateau
+585	0	65	0	Magisters' Terrace - Normal
+585	1	70	0	Magisters' Terrace - Heroic
+595	0	75	0	Culling of Stratholme
+595	1	80	0	Culling of Stratholme
+599	0	72	0	Ulduar,Halls of Stone
+599	1	80	0	Ulduar,Halls of Stone
+600	0	69	0	Drak'Tharon Keep
+600	1	80	0	Drak'Tharon Keep
+601	0	67	0	Azjol-Nerub
+601	1	80	0	Azjol-Nerub
+602	0	75	0	Ulduar,Halls of Lightning
+602	1	80	0	Ulduar,Halls of Lightning
+603	0	80	0	Ulduar - 10man
+603	1	80	0	Ulduar
+604	0	71	0	Gundrak (North entrance)
+604	1	80	0	Gundrak (North entrance)
+608	0	70	0	Violet Hold
+608	1	80	0	Violet Hold
+615	0	80	0	The Obsidian Sanctum - 10man
+615	1	80	0	Chamber of Aspects,Obsidian Sanctum
+616	0	80	0	The Eye of Eternity (Malygos) - 10man
+616	1	80	0	The Eye of Eternity
+619	0	68	0	Ahn'Kahet
+619	1	80	0	Ahn'Kahet
+624	0	80	0	Vault of Archavon - 10man
+624	1	80	0	Vault of Archavon
+631	0	80	0	Icecrown Citadel - 10man Normal
+631	1	80	0	IceCrown Citadel
+631	2	80	0	IceCrown Citadel
+631	3	80	0	IceCrown Citadel
+632	0	75	0	Forge of Souls
+632	1	80	0	Forge of Souls
+649	0	80	0	Trial of the Crusader - 10man Normal
+649	1	80	0	Trial of the Crusader
+649	2	80	0	Trial of the Crusader
+649	3	80	0	Trial of the Crusader
+650	0	75	0	Trial of the Champion
+650	1	80	0	Trial of the Champion
+658	0	78	0	Pit of Saron
+658	1	80	0	Pit of Saron
+668	0	78	0	Halls of Reflection
+668	1	80	0	Halls of Reflection
+724	0	80	0	The Ruby Sanctum - 10man Normal
+724	1	80	0	The Ruby Sanctum
+724	2	80	0	The Ruby Sanctum
+724	3	80	0	The Ruby Sanctum

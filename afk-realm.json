@@ -1,0 +1,8 @@
+{
+  "about": "Read by AFK Realm (https://github.com/aspollon/AFK-Realm) when it builds the server. Without AFK Realm, set these values by hand: see README.md.",
+  "patches": [],
+  "settings": [
+    { "file": "worldserver.conf", "key": "MaxPlayerLevel", "value": "60", "why": "The journey of this module ends at 60, where the classes of Conquest of Azeroth end." },
+    { "file": "playerbots.conf", "key": "AiPlayerbot.RandomBotMaxLevel", "value": "60", "why": "Random bots end at 60 like the players; they follow the journey through Outland and Northrend by the levels of the creatures." }
+  ]
+}
