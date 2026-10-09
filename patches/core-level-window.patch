@@ -1,0 +1,87 @@
+diff --git a/modules/mod-destiny-weaver/src/destiny_weaver.cpp b/modules/mod-destiny-weaver/src/destiny_weaver.cpp
+index 0fbd7f83..c2a69f8b 100644
+--- a/modules/mod-destiny-weaver/src/destiny_weaver.cpp
++++ b/modules/mod-destiny-weaver/src/destiny_weaver.cpp
+@@ -40,6 +40,7 @@
+ // nhi_infernaltome, the burning tome. Nothing else in the menu deviates from the capture, including
+ // the absence of a third option.
+ #include "destiny_weaver.h"
++#include "LocalLevelScaling.h"
+ 
+ #include "Chat.h"
+ #include "Config.h"
+@@ -135,6 +136,8 @@ namespace
+     {
+         if (!ModuleEnabled() || !sConfigMgr->GetOption<bool>("DestinyWeaver.LevelScaling", true))
+             return false;
++        if (LocalLevelScaling::ScalingChoiceForced.load(std::memory_order_relaxed))
++            return true;        // World Journey: the realm plays the scaled world, for every character
+ 
+         switch (StoredChoice(player, DestinyWeaver::SETTING_LEVEL_SCALING))
+         {
+@@ -159,10 +162,11 @@ namespace
+                                     !DestinyWeaver::ExperienceBonusControlEnabled(player)),
+                          GOSSIP_SENDER_DESTINY_WEAVER, ACTION_TOGGLE_EXPERIENCE_BONUS_CONTROL);
+ 
+-        AddGossipItemFor(player, GOSSIP_ICON_CHAT,
+-                         OptionText(ICON_OPEN_WORLD_SCALING, "Open world scaling!",
+-                                    DestinyWeaver::LevelScalingEnabled(player)),
+-                         GOSSIP_SENDER_DESTINY_WEAVER, ACTION_TOGGLE_SCALING);
++        if (!LocalLevelScaling::ScalingChoiceForced.load(std::memory_order_relaxed))
++            AddGossipItemFor(player, GOSSIP_ICON_CHAT,
++                             OptionText(ICON_OPEN_WORLD_SCALING, "Open world scaling!",
++                                        DestinyWeaver::LevelScalingEnabled(player)),
++                             GOSSIP_SENDER_DESTINY_WEAVER, ACTION_TOGGLE_SCALING);
+ 
+         SendGossipMenuFor(player, GOSSIP_TEXT_GREETING, creature);
+     }
+diff --git a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
+index 2c29fda6..9ab46bcb 100644
+--- a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
++++ b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
+@@ -219,9 +219,16 @@ namespace
+         Map const* map = creature->GetMap();
+         // The viewer's own rule, not the realm's: a level that is told to one client is bounded by
+         // nothing, because there is nobody else for a high view to be wrong for.
+-        uint8 const level = map->IsNonRaidDungeon() && map->IsRegularDifficulty()
++        bool const dungeon = map->IsNonRaidDungeon() && map->IsRegularDifficulty();
++        uint8 level = dungeon
+             ? LocalLevelScaling::ScaleDungeonCreatureLevelForViewer(own, viewer->GetLevel(), offset)
+             : LocalLevelScaling::ScaleCreatureLevelForViewer(own, viewer->GetLevel(), offset);
++        // In the open world, a window around the viewer may place the creature instead (World Journey).
++        if (!dungeon && !map->Instanceable())
++            if (LocalLevelScaling::CreatureWindowResolver const window =
++                    LocalLevelScaling::CreatureWindowOwner.load(std::memory_order_relaxed))
++                if (uint8 const placed = window(viewer, creature, own))
++                    level = placed;
+         if (level == own)
+             return false;               // their version *is* the creature: nothing to virtualise
+ 
+diff --git a/src/server/game/Miscellaneous/LocalLevelScaling.h b/src/server/game/Miscellaneous/LocalLevelScaling.h
+index b82e5b3b..1d994102 100644
+--- a/src/server/game/Miscellaneous/LocalLevelScaling.h
++++ b/src/server/game/Miscellaneous/LocalLevelScaling.h
+@@ -48,12 +48,23 @@ inline std::atomic<std::uint32_t> QuestXpKeepSharePercent{100};
+ using QuestScalingResolver = bool (*)(Player const*);
+ inline std::atomic<QuestScalingResolver> QuestScalingOwner{nullptr};
+ 
++/// World Journey: scaling is the realm's, not a choice - every character plays the scaled world.
++#define LOCAL_LEVEL_SCALING_WORLD_JOURNEY 1
++inline std::atomic<bool> ScalingChoiceForced{false};
++
++/// World Journey: where a lifted creature stands for a viewer in the open world - its place in its zone, within a
++/// window around the viewer - instead of all of them at the viewer's level minus the offset. 0 = no opinion.
++using CreatureWindowResolver = std::uint8_t (*)(Player const*, Creature const*, std::uint8_t ownLevel);
++inline std::atomic<CreatureWindowResolver> CreatureWindowOwner{nullptr};
++
+ /// The character's own answer, with no realm switch in front of it: whether this character asked
+ /// for open-world scaling. The realm switches ask *whether* a character's choice is consulted at
+ /// all; this asks *what* it is, and is what the per-viewer combat paths resolve.
+ inline bool ScalingChoiceEnabled(Player const* player)
+ {
+     QuestScalingResolver const owner = QuestScalingOwner.load(std::memory_order_relaxed);
++    if (owner && ScalingChoiceForced.load(std::memory_order_relaxed))
++        return true;
+     return owner && owner(player);
+ }
+ 

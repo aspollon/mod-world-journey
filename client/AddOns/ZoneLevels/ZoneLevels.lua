@@ -1,67 +1,78 @@
--- Zone Levels: the world map shows the zone levels of the journey from 1 to 60.
--- Built by tools/make_levels.py of mod-world-journey - do not edit by hand.
+-- Zone Levels, the client half of mod-world-journey.
+-- The server tells this addon at login what the journey looks like on this realm:
+--   B                     a new set begins
+--   Z<key>=<lo>-<hi>;...  the levels of zones, as the world map knows them (WORLD_MAP_LEVELS)
+--   E<before>~<after>     a line of a gem or an enchantment: what it said, what it gives now
+--   D                     the set is complete
+-- The last complete set is kept, so the map is right even before the server has spoken.
 
-if type(WORLD_MAP_LEVELS) ~= "table" then return end
+local PREFIX = "ZoneLevels"
+local pending
+local frame = CreateFrame("Frame")
 
-WORLD_MAP_LEVELS["Durotar"] = { 1, 60 }
-WORLD_MAP_LEVELS["Mulgore"] = { 1, 60 }
-WORLD_MAP_LEVELS["Barrens"] = { 7, 60 }
-WORLD_MAP_LEVELS["Alterac"] = { 19, 60 }
-WORLD_MAP_LEVELS["Arathi"] = { 19, 60 }
-WORLD_MAP_LEVELS["Badlands"] = { 22, 60 }
-WORLD_MAP_LEVELS["BlastedLands"] = { 29, 60 }
-WORLD_MAP_LEVELS["Tirisfal"] = { 1, 60 }
-WORLD_MAP_LEVELS["Silverpine"] = { 7, 60 }
-WORLD_MAP_LEVELS["WesternPlaguelands"] = { 32, 60 }
-WORLD_MAP_LEVELS["EasternPlaguelands"] = { 34, 60 }
-WORLD_MAP_LEVELS["Hilsbrad"] = { 13, 60 }
-WORLD_MAP_LEVELS["Hinterlands"] = { 29, 60 }
-WORLD_MAP_LEVELS["DunMorogh"] = { 1, 60 }
-WORLD_MAP_LEVELS["SearingGorge"] = { 27, 60 }
-WORLD_MAP_LEVELS["BurningSteppes"] = { 32, 60 }
-WORLD_MAP_LEVELS["Elwynn"] = { 1, 60 }
-WORLD_MAP_LEVELS["DeadwindPass"] = { 35, 60 }
-WORLD_MAP_LEVELS["Duskwood"] = { 13, 60 }
-WORLD_MAP_LEVELS["LochModan"] = { 7, 60 }
-WORLD_MAP_LEVELS["Redridge"] = { 10, 60 }
-WORLD_MAP_LEVELS["Stranglethorn"] = { 19, 60 }
-WORLD_MAP_LEVELS["SwampOfSorrows"] = { 22, 60 }
-WORLD_MAP_LEVELS["Westfall"] = { 7, 60 }
-WORLD_MAP_LEVELS["Wetlands"] = { 13, 60 }
-WORLD_MAP_LEVELS["Teldrassil"] = { 1, 60 }
-WORLD_MAP_LEVELS["Darkshore"] = { 7, 60 }
-WORLD_MAP_LEVELS["Ashenvale"] = { 12, 60 }
-WORLD_MAP_LEVELS["ThousandNeedles"] = { 16, 60 }
-WORLD_MAP_LEVELS["StonetalonMountains"] = { 10, 60 }
-WORLD_MAP_LEVELS["Desolace"] = { 19, 60 }
-WORLD_MAP_LEVELS["Feralas"] = { 26, 60 }
-WORLD_MAP_LEVELS["Dustwallow"] = { 22, 60 }
-WORLD_MAP_LEVELS["Tanaris"] = { 26, 60 }
-WORLD_MAP_LEVELS["Aszhara"] = { 29, 60 }
-WORLD_MAP_LEVELS["Felwood"] = { 31, 60 }
-WORLD_MAP_LEVELS["UngoroCrater"] = { 31, 60 }
-WORLD_MAP_LEVELS["Silithus"] = { 35, 60 }
-WORLD_MAP_LEVELS["Winterspring"] = { 34, 60 }
-WORLD_MAP_LEVELS["EversongWoods"] = { 1, 60 }
-WORLD_MAP_LEVELS["Ghostlands"] = { 7, 60 }
-WORLD_MAP_LEVELS["AzuremystIsle"] = { 1, 60 }
-WORLD_MAP_LEVELS["BloodmystIsle"] = { 7, 60 }
-WORLD_MAP_LEVELS["Hellfire"] = { 30, 60 }
-WORLD_MAP_LEVELS["Zangarmarsh"] = { 33, 60 }
-WORLD_MAP_LEVELS["TerokkarForest"] = { 36, 60 }
-WORLD_MAP_LEVELS["Nagrand"] = { 39, 60 }
-WORLD_MAP_LEVELS["BladesEdgeMountains"] = { 40, 60 }
-WORLD_MAP_LEVELS["Netherstorm"] = { 43, 60 }
-WORLD_MAP_LEVELS["ShadowmoonValley"] = { 43, 60 }
-WORLD_MAP_LEVELS["Sunwell"] = { 55, 60 }
-WORLD_MAP_LEVELS["BoreanTundra"] = { 40, 60 }
-WORLD_MAP_LEVELS["HowlingFjord"] = { 40, 60 }
-WORLD_MAP_LEVELS["Dragonblight"] = { 45, 60 }
-WORLD_MAP_LEVELS["GrizzlyHills"] = { 48, 60 }
-WORLD_MAP_LEVELS["ZulDrak"] = { 50, 60 }
-WORLD_MAP_LEVELS["SholazarBasin"] = { 52, 60 }
-WORLD_MAP_LEVELS["IcecrownGlacier"] = { 55, 60 }
-WORLD_MAP_LEVELS["TheStormPeaks"] = { 55, 60 }
-WORLD_MAP_LEVELS["CrystalsongForest"] = { 55, 60 }
-WORLD_MAP_LEVELS["LakeWintergrasp"] = { 55, 60 }
-WORLD_MAP_LEVELS["HrothgarsLanding"] = { 55, 60 }
+local function Apply(db)
+    if not db then return end
+    if type(WORLD_MAP_LEVELS) == "table" then
+        for key, levels in pairs(db.zones or {}) do
+            WORLD_MAP_LEVELS[key] = { levels[1], levels[2] }
+        end
+    end
+end
+
+local function Retext(tooltip)
+    local texts = ZoneLevelsDB and ZoneLevelsDB.texts
+    if not texts or not next(texts) then return end
+    local name = tooltip:GetName()
+    for i = 2, tooltip:NumLines() do
+        local line = _G[name .. "TextLeft" .. i]
+        local text = line and line:GetText()
+        if text then
+            local now = texts[text]
+            if not now then
+                local head, rest = text:match("^(.-:%s*)(.+)$")      -- "Socket Bonus: ..." and the like
+                if head and texts[rest] then now = head .. texts[rest] end
+            end
+            if now then line:SetText(now) end
+        end
+    end
+end
+
+for _, tooltip in ipairs({ GameTooltip, ItemRefTooltip, ShoppingTooltip1, ShoppingTooltip2, ShoppingTooltip3 }) do
+    if tooltip and tooltip.HookScript then
+        tooltip:HookScript("OnTooltipSetItem", Retext)
+    end
+end
+
+frame:RegisterEvent("CHAT_MSG_ADDON")
+frame:RegisterEvent("ADDON_LOADED")
+frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+frame:SetScript("OnEvent", function(self, event, prefix, message, channel, sender)
+    if event == "ADDON_LOADED" then
+        if prefix == PREFIX then Apply(ZoneLevelsDB) end
+        return
+    end
+    if event == "PLAYER_ENTERING_WORLD" then
+        -- Ask once per session: what the server sent at login may have arrived before this addon was loaded.
+        self:UnregisterEvent("PLAYER_ENTERING_WORLD")
+        SendAddonMessage(PREFIX, "?", "WHISPER", UnitName("player"))
+        return
+    end
+    if prefix ~= PREFIX or type(message) ~= "string" then return end
+    local kind, body = message:sub(1, 1), message:sub(2)
+    if kind == "B" then
+        pending = { zones = {}, texts = {} }
+    elseif not pending then
+        return
+    elseif kind == "Z" then
+        for key, lo, hi in body:gmatch("([%w_]+)=(%d+)%-(%d+);") do
+            pending.zones[key] = { tonumber(lo), tonumber(hi) }
+        end
+    elseif kind == "E" then
+        local before, after = body:match("^(.-)~(.*)$")
+        if before and before ~= "" then pending.texts[before] = after end
+    elseif kind == "D" then
+        ZoneLevelsDB = pending
+        pending = nil
+        Apply(ZoneLevelsDB)
+    end
+end)

@@ -2,12 +2,15 @@
  * Released under GNU AGPL v3: https://github.com/azerothcore/azerothcore-wotlk/blob/master/LICENSE-AGPL3
  */
 #include "JourneyDb.h"
+#include "JourneyData.h"
 
 #include <algorithm>
 #include <cmath>
 #include <cstdio>
 #include <cstdlib>
+#include <cstring>
 #include <fstream>
+#include <map>
 #include <set>
 #include <unordered_set>
 
@@ -46,6 +49,59 @@ namespace journey
             out.byItemLevel[itemLevel] = { record[1], record[6], record[11] };
         }
         return !out.byItemLevel.empty();
+    }
+
+    bool DbcFile::Read(std::string const& file)
+    {
+        std::ifstream in(file, std::ios::binary);
+        if (!in)
+            return false;
+        uint32_t header[5] = {};
+        if (!in.read(reinterpret_cast<char*>(header), sizeof(header)) || header[0] != 0x43424457 /* WDBC */ ||
+            !header[2] || header[3] != header[2] * 4)
+            return false;
+        fields = header[2];
+        values.resize(size_t(header[1]) * fields);
+        strings.resize(header[4]);
+        if (!in.read(reinterpret_cast<char*>(values.data()), std::streamsize(values.size() * 4)) ||
+            !in.read(strings.data(), std::streamsize(strings.size())))
+            return false;
+        rowOf.clear();
+        for (size_t row = 0; row < header[1]; ++row)
+            rowOf[values[row * fields]] = row;
+        return true;
+    }
+
+    std::string DbcFile::String(uint32_t offset) const
+    {
+        if (offset >= strings.size())
+            return std::string();
+        return std::string(strings.c_str() + offset);
+    }
+
+    Difficulty::Difficulty()
+    {
+        for (int rank = 0; rank < RANKS; ++rank)
+            for (int stat = 0; stat < STATS; ++stat)
+            {
+                general[rank][stat] = 1.0;
+                for (int part = 0; part < PARTS; ++part)
+                    byPart[part][rank][stat] = -1.0;
+            }
+        // The silver ones were no danger: rares and rare elites hit and hold out a little more.
+        for (int rank : { RARE, RARE_ELITE })
+        {
+            general[rank][HEALTH] = 1.5;
+            general[rank][DAMAGE] = 1.25;
+            general[rank][SPELL] = 1.25;
+        }
+    }
+
+    double Difficulty::Get(int part, int rank, int stat) const
+    {
+        rank = std::clamp(rank, 0, RANKS - 1);
+        double const own = byPart[std::clamp(part, 0, PARTS - 1)][rank][stat];
+        return own >= 0.0 ? own : general[rank][stat];
     }
 
     namespace
@@ -258,12 +314,31 @@ namespace journey
                         heroicOf[other] = uint32_t(Int(row[0]));
             });
 
+            // Difficulty set by hand: for a whole map (entry 0) or a single creature; -1 = as the regulators say.
+            std::string const table = settings.prefix + "_difficulty";
+            db.execute("CREATE TABLE IF NOT EXISTS `" + table + "` ("
+                "`map` INT UNSIGNED NOT NULL DEFAULT 0, `entry` INT UNSIGNED NOT NULL DEFAULT 0, "
+                "`health` FLOAT NOT NULL DEFAULT -1, `damage` FLOAT NOT NULL DEFAULT -1, `spell` FLOAT NOT NULL DEFAULT -1, "
+                "`armor` FLOAT NOT NULL DEFAULT -1, `comment` VARCHAR(255) NOT NULL DEFAULT '', PRIMARY KEY (`map`, `entry`)"
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='World Journey: the difficulty of a map (entry 0) or of one "
+                "creature, by hand; -1 keeps what the regulators say'");
+            std::unordered_map<uint32_t, std::array<double, 4>> byMap, byCreature;
+            db.query("SELECT `map`, `entry`, `health`, `damage`, `spell`, `armor` FROM `" + table + "`", [&](Row const& row)
+            {
+                std::array<double, 4> const values{ Number(row[2]), Number(row[3]), Number(row[4]), Number(row[5]) };
+                if (uint32_t const entry = uint32_t(Int(row[1])))
+                    byCreature[entry] = values;
+                else
+                    byMap[uint32_t(Int(row[0]))] = values;
+            });
+
             Ledger ledger;
             ledger.source = "creature_template";
             ledger.backup = settings.prefix + "_creature";
             ledger.comment = "The original levels of the creatures, and what the journey made of them";
             ledger.keys = { "entry" };
-            ledger.columns = { { "minlevel" }, { "maxlevel" }, { "mingold" }, { "maxgold" }, { "exp" } };
+            ledger.columns = { { "minlevel" }, { "maxlevel" }, { "mingold" }, { "maxgold" }, { "exp" },
+                { "HealthModifier", true }, { "DamageModifier", true }, { "ArmorModifier", true } };
             ledger.extras = { "s.`rank`" };
 
             Tally const tally = Keep(db, ledger, [&](Entry const& entry)
@@ -300,10 +375,37 @@ namespace journey
                 // world, which go up to 60 without the jumps of the later tables. The raids and heroics keep theirs -
                 // they are the harder end of the journey.
                 bool const onTheWay = era == ERA_CLASSIC || era == ERA_OUTLAND || era == ERA_NORTHREND;
-                if (onTheWay && (newMin != origMin || newMax != origMax))
+                if (settings.journeyBaseStats && onTheWay && (newMin != origMin || newMax != origMax))
                     next[4] = 0;
                 if (newMin != origMin || newMax != origMax)
                     outcome.shifts[id] = { uint8_t(origMin), uint8_t(origMax), uint8_t(newMin), uint8_t(newMax), uint8_t(origExp), uint8_t(next[4]) };
+
+                // How hard it is: by part and rank, then by its map, then for itself.
+                int const part = PartOf(era);
+                int const rank = int(std::clamp<long>(Int(entry.extra[0]), 0, Difficulty::RANKS - 1));
+                std::array<double, 4> factor{};
+                for (int stat = 0; stat < 4; ++stat)
+                    factor[stat] = settings.difficulty.Get(part, rank, stat);
+                auto apply = [&](std::array<double, 4> const& set)
+                {
+                    for (int stat = 0; stat < 4; ++stat)
+                        if (set[stat] >= 0.0)
+                            factor[stat] = set[stat];
+                };
+                if (map != maps.end())
+                {
+                    auto own = byMap.find(map->second);
+                    if (own != byMap.end())
+                        apply(own->second);
+                }
+                auto own = byCreature.find(id);
+                if (own != byCreature.end())
+                    apply(own->second);
+                next[5] = entry.orig[5] * factor[Difficulty::HEALTH];
+                next[6] = entry.orig[6] * factor[Difficulty::DAMAGE];
+                next[7] = entry.orig[7] * factor[Difficulty::ARMOR];
+                if (std::fabs(factor[Difficulty::SPELL] - 1.0) > 1e-6)
+                    outcome.spellMultipliers[id] = factor[Difficulty::SPELL];
                 return next;
             });
             Report(db, settings, tally, "creatures");
@@ -311,7 +413,8 @@ namespace journey
 
         // ------------------------------------------------------------------------------------ quests
 
-        void Quests(Db const& db, Settings const& settings, std::unordered_map<uint32_t, uint32_t> const& creatureMaps)
+        void Quests(Db const& db, Settings const& settings, std::unordered_map<uint32_t, uint32_t> const& creatureMaps,
+            std::unordered_map<uint32_t, int> const& zoneShift, Outcome& outcome)
         {
             std::unordered_map<uint32_t, uint32_t> maps;    // quest -> the map of whoever or whatever starts it
             db.query("SELECT `id`, `quest` FROM `creature_queststarter`", [&](Row const& row)
@@ -342,6 +445,7 @@ namespace journey
             ledger.comment = "The original levels of the quests, and what the journey made of them";
             ledger.keys = { "ID" };
             ledger.columns = { { "QuestLevel" }, { "MinLevel" }, { "RewardMoney" } };
+            ledger.extras = { "s.`QuestSortID`" };
 
             Tally const tally = Keep(db, ledger, [&](Entry const& entry)
             {
@@ -361,8 +465,20 @@ namespace journey
                 if (newLevel > 0 && reward != rewardLevel.end() && reward->second > newLevel + 3)
                     newLevel = std::min(std::max(reward->second, newLevel), std::max(level, 1));
                 int newMin = minLevel ? Compress(minLevel, era) : minLevel;
+                // A zone set by hand takes its quests along (a quest's sort id is its zone when positive).
+                long const sort = Int(entry.extra[0]);
+                auto shift = sort > 0 ? zoneShift.find(uint32_t(sort)) : zoneShift.end();
+                if (shift != zoneShift.end())
+                {
+                    int const top = CurrentShape().endgame;
+                    if (newLevel > 0)
+                        newLevel = std::clamp(newLevel + shift->second, 1, top);
+                    if (newMin > 0)
+                        newMin = std::clamp(newMin + shift->second, 1, top);
+                }
                 if (newLevel > 0 && newMin > newLevel)
                     newMin = newLevel;
+                outcome.questParts[uint32_t(Int(entry.keys[0]))] = uint8_t(PartOf(era));
                 next[0] = newLevel;
                 next[1] = newMin;
                 if (money > 0 && level > 0)
@@ -450,7 +566,7 @@ namespace journey
             Tally const tally = Keep(db, ledger, [&](Entry const& entry)
             {
                 std::vector<double> next = entry.orig;
-                if (!settings.enabled)
+                if (!settings.enabled || !settings.items)
                     return next;
                 uint32_t const id = uint32_t(Int(entry.keys[0]));
                 int const required = int(entry.orig[0]), itemLevel = int(entry.orig[1]);
@@ -493,7 +609,7 @@ namespace journey
                             ++endgameCount[plan.era];
                         }
                     }
-                    else
+                    else if (settings.consumables)
                     {
                         double const before = worth.At(required, ExpansionOf(plan.era)), after = worth.At(plan.requiredLevel, 0);
                         if (before > 0.0 && after > 0.0)
@@ -502,7 +618,7 @@ namespace journey
                 }
 
                 // A gem of Outland or Northrend: its stats come from the enchantment it carries.
-                if (uint32_t const gem = uint32_t(Int(entry.extra[2])))
+                if (uint32_t const gem = settings.enchantments ? uint32_t(Int(entry.extra[2])) : 0)
                     outcome.gemEras[gem] = uint8_t(id < 36000 ? ITEM_TBC : ITEM_WOTLK);
                 // The spells of the item - on use, on equip, on hit - and its socket bonus go with it.
                 for (size_t i = 0; i < 5; ++i)
@@ -512,7 +628,7 @@ namespace journey
                     if (spell && (trigger == 0 || trigger == 1 || trigger == 2 || trigger == 5))
                         keepMost(outcome.spellFactors, spell, spellRatio);
                 }
-                if (uint32_t const bonus = uint32_t(Int(entry.extra[3])))
+                if (uint32_t const bonus = settings.enchantments ? uint32_t(Int(entry.extra[3])) : 0)
                     keepMost(outcome.enchantFactors, bonus, statRatio);
                 return next;
             });
@@ -542,7 +658,7 @@ namespace journey
             Tally const tally = Keep(db, ledger, [&](Entry const& entry)
             {
                 std::vector<double> next = entry.orig;
-                if (!settings.enabled)
+                if (!settings.enabled || !settings.trainers)
                     return next;
                 int const level = int(entry.orig[0]);
                 long const spell = Int(entry.keys[1]);
@@ -567,7 +683,7 @@ namespace journey
             Tally const tally = Keep(db, ledger, [&](Entry const& entry)
             {
                 std::vector<double> next = entry.orig;
-                if (settings.enabled)
+                if (settings.enabled && settings.battlegrounds)
                     next[0] = std::min(entry.orig[0], 60.0);
                 return next;
             });
@@ -592,17 +708,316 @@ namespace journey
                         note(uint32_t(Int(row[i])), Int(row[0]));
             });
         }
+
+        // ------------------------------------------------------------------------------------ zones and bots
+
+        /// How far a zone set by hand moved from where the journey would have put it.
+        std::unordered_map<uint32_t, int> ZoneShift()
+        {
+            std::unordered_map<uint32_t, int> shift;
+            for (ZoneData const& zone : Zones)
+                if (int const delta = ZoneEntry(zone.zone, zone.part, zone.originalEntry, true) - ZoneEntry(zone.zone, zone.part, zone.originalEntry, false))
+                    shift[zone.zone] = delta;
+            return shift;
+        }
+
+        int ByPart(int level, int part)
+        {
+            return part == 1 ? Outland(level) : part == 2 ? Northrend(level) : Classic(std::min(level, 63));
+        }
+
+        /// The zones as the journey has them - for the random bots (read by the module's Playerbots patch) and the
+        /// world map of the client - and the levels the bots take from it.
+        void Places(Db const& db, Settings const& settings, std::unordered_map<uint32_t, int> const& zoneShift, Outcome& outcome)
+        {
+            std::string const zones = settings.prefix + "_zone", bot = settings.prefix + "_bot";
+            db.execute("CREATE TABLE IF NOT EXISTS `" + zones + "` (`zone` INT UNSIGNED NOT NULL PRIMARY KEY, `map` INT UNSIGNED NOT NULL DEFAULT 0, "
+                "`part` TINYINT UNSIGNED NOT NULL DEFAULT 0, `key` VARCHAR(64) NOT NULL DEFAULT '', `original_entry` TINYINT UNSIGNED NOT NULL DEFAULT 0, "
+                "`entry` TINYINT UNSIGNED NOT NULL DEFAULT 0, `bot_min` TINYINT UNSIGNED NOT NULL DEFAULT 0, `bot_max` TINYINT UNSIGNED NOT NULL DEFAULT 0"
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='World Journey: the zones at the levels of the journey, rewritten at every start'");
+            db.execute("CREATE TABLE IF NOT EXISTS `" + bot + "` (`name` VARCHAR(32) NOT NULL PRIMARY KEY, `value` INT NOT NULL DEFAULT 0"
+                ") ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='World Journey: what the random bots take from the journey, rewritten at every start'");
+            db.execute("DELETE FROM `" + zones + "`");
+            db.execute("DELETE FROM `" + bot + "`");
+
+            Shape const& shape = CurrentShape();
+            int const top = shape.endgame;
+            auto& mounts = outcome.mountLevels;
+            if (settings.enabled && settings.trainers)
+                mounts = { Compress(20, ERA_CLASSIC), Compress(40, ERA_CLASSIC), Outland(60), Outland(70) };
+            if (!settings.enabled)
+                return;
+
+            struct Place { uint32_t map = 0; int part = 0; std::string key; int original = 0; int entry = 0; int botMin = 0; int botMax = 0; };
+            std::map<uint32_t, Place> places;
+            for (ZoneData const& zone : Zones)
+            {
+                Place& place = places[zone.zone];
+                place.map = zone.map;
+                place.part = zone.part;
+                place.key = zone.key;
+                place.original = zone.originalEntry;
+                place.entry = ZoneEntry(zone.zone, zone.part, zone.originalEntry);
+            }
+            for (BotZoneData const& zone : BotZones)
+            {
+                Place& place = places[zone.zone];
+                if (!place.entry)
+                {
+                    place.part = zone.part;
+                    place.original = zone.originalMin;
+                    place.entry = std::clamp(ByPart(zone.originalMin, zone.part), 1, top);
+                }
+                auto shift = zoneShift.find(zone.zone);
+                int const delta = shift != zoneShift.end() ? shift->second : 0;
+                place.botMin = std::clamp(ByPart(zone.originalMin, zone.part) + delta, 1, top);
+                place.botMax = std::clamp(ByPart(zone.originalMax, zone.part) + delta, place.botMin, top);
+                if (zone.zone == 4080 && shape.outland)
+                {
+                    place.botMin = std::max(1, top - 5);     // the Isle of Quel'Danas
+                    place.botMax = top;
+                }
+            }
+            std::vector<std::string> rows;
+            for (auto const& [zone, place] : places)
+                rows.push_back("(" + std::to_string(zone) + "," + std::to_string(place.map) + "," + std::to_string(place.part) + ",'" + place.key + "'," +
+                    std::to_string(place.original) + "," + std::to_string(place.entry) + "," + std::to_string(place.botMin) + "," +
+                    std::to_string(place.botMax) + ")");
+            std::string values;
+            for (std::string const& row : rows)
+                values += (values.empty() ? "" : ",") + row;
+            if (!values.empty())
+                db.execute("INSERT INTO `" + zones + "` (`zone`, `map`, `part`, `key`, `original_entry`, `entry`, `bot_min`, `bot_max`) VALUES " + values);
+            db.execute("INSERT INTO `" + bot + "` (`name`, `value`) VALUES ('max_level', 60), ('ground_mount', " + std::to_string(mounts[0]) +
+                "), ('fast_ground_mount', " + std::to_string(mounts[1]) + "), ('fly_mount', " + std::to_string(mounts[2]) +
+                "), ('fast_fly_mount', " + std::to_string(mounts[3]) + ")");
+        }
+
+        // ------------------------------------------------------------------------------------ spells of items
+
+        std::string Escape(std::string const& text)
+        {
+            std::string out;
+            out.reserve(text.size() + 8);
+            for (char c : text)
+                switch (c)
+                {
+                    case '\\': out += "\\\\"; break;
+                    case '\'': out += "\\'"; break;
+                    case '\0': out += "\\0"; break;
+                    case '\n': out += "\\n"; break;
+                    case '\r': out += "\\r"; break;
+                    case '\x1a': out += "\\Z"; break;
+                    default: out += c;
+                }
+            return out;
+        }
+
+        int LevelOf(int level)
+        {
+            return level > 1 ? Compress(level, ERA_CLASSIC) : level;
+        }
+
+        /// The spells of items, scaled where the server reads them and the client sees them: in spell_dbc, whose
+        /// rows CoA sends to the client at login - so a potion's tooltip says what the potion does. A spell that is
+        /// not in spell_dbc yet is copied there from the server's Spell.dbc, and taken out again when it is no
+        /// longer scaled.
+        void Spells(Db const& db, Settings const& settings, DbcFile const& dbc, Outcome& outcome)
+        {
+            std::string const owned = settings.prefix + "_spell_owned", wanted = settings.prefix + "_spell_wanted";
+            db.execute("CREATE TABLE IF NOT EXISTS `" + owned + "` (`ID` INT UNSIGNED NOT NULL PRIMARY KEY) ENGINE=InnoDB "
+                "COMMENT='World Journey: the rows of spell_dbc the module copied from Spell.dbc'");
+            db.execute("CREATE TABLE IF NOT EXISTS `" + wanted + "` (`ID` INT UNSIGNED NOT NULL PRIMARY KEY, `factor` FLOAT NOT NULL DEFAULT 1) "
+                "ENGINE=InnoDB COMMENT='World Journey: the spells of items it scales in spell_dbc, rewritten at every start'");
+            db.execute("DELETE FROM `" + wanted + "`");
+
+            // The columns of spell_dbc, which are the fields of Spell.dbc in order.
+            std::vector<std::pair<std::string, std::string>> columns;   // data type, column type
+            db.query("SELECT `DATA_TYPE`, `COLUMN_TYPE` FROM information_schema.`COLUMNS` WHERE `TABLE_SCHEMA` = DATABASE() "
+                "AND `TABLE_NAME` = 'spell_dbc' ORDER BY `ORDINAL_POSITION`", [&](Row const& row) { columns.emplace_back(row[0], row[1]); });
+            bool const usable = settings.enabled && settings.tooltips && dbc.fields >= 234 && columns.size() == dbc.fields;
+            if (settings.enabled && settings.tooltips && !usable)
+                db.log("the spells of items are scaled in memory only - " + std::string(dbc.fields ? "Spell.dbc and spell_dbc do not match" :
+                    "no Spell.dbc") + ", so their tooltips keep the old numbers");
+
+            std::unordered_map<uint32_t, double> factors;
+            if (usable)
+            {
+                std::vector<uint32_t> pending;
+                auto note = [&](uint32_t id, double factor)
+                {
+                    auto found = factors.find(id);
+                    if (!id || (found != factors.end() && found->second >= factor))
+                        return;
+                    factors[id] = factor;
+                    pending.push_back(id);
+                };
+                for (auto const& [id, factor] : outcome.spellFactors)
+                    note(id, factor);
+                while (!pending.empty())
+                {
+                    uint32_t const id = pending.back();
+                    pending.pop_back();
+                    if (!dbc.Has(id))
+                        continue;
+                    double const factor = factors[id];
+                    for (uint32_t e = 0; e < 3; ++e)
+                    {
+                        uint32_t const effect = dbc.Get(id, 71 + e), aura = dbc.Get(id, 95 + e);
+                        if (IsTriggerEffect(effect, aura))
+                            note(dbc.Get(id, 116 + e), factor);
+                        else if (IsEnchantEffect(effect) && settings.enchantments && int32_t(dbc.Get(id, 110 + e)) > 0)
+                        {
+                            uint32_t const enchant = dbc.Get(id, 110 + e);
+                            auto known = outcome.enchantFactors.find(enchant);
+                            if (known == outcome.enchantFactors.end() || factor > known->second)
+                                outcome.enchantFactors[enchant] = factor;
+                        }
+                    }
+                }
+                for (auto it = factors.begin(); it != factors.end();)
+                {
+                    bool amount = false;
+                    if (dbc.Has(it->first))
+                        for (uint32_t e = 0; e < 3; ++e)
+                            amount |= IsAmountEffect(dbc.Get(it->first, 71 + e), dbc.Get(it->first, 95 + e));
+                    if (it->second >= 0.999 || !amount)
+                        it = factors.erase(it);
+                    else
+                        ++it;
+                }
+            }
+
+            std::vector<std::string> rows;
+            for (auto const& [id, factor] : factors)
+                rows.push_back("(" + std::to_string(id) + "," + Format(factor, true) + ")");
+            for (size_t i = 0; i < rows.size(); i += 1000)
+            {
+                std::string values;
+                for (size_t j = i; j < std::min(rows.size(), i + 1000); ++j)
+                    values += (j > i ? "," : "") + rows[j];
+                db.execute("INSERT INTO `" + wanted + "` (`ID`, `factor`) VALUES " + values);
+            }
+
+            // Copy what spell_dbc does not have yet.
+            std::set<uint32_t> present;
+            db.query("SELECT s.`ID` FROM `spell_dbc` s JOIN `" + wanted + "` w ON w.`ID` = s.`ID`", [&](Row const& row) { present.insert(uint32_t(Int(row[0]))); });
+            size_t copied = 0;
+            std::string copies, marks;
+            auto flush = [&]()
+            {
+                if (copies.empty())
+                    return;
+                db.execute("INSERT INTO `spell_dbc` VALUES " + copies);
+                db.execute("INSERT IGNORE INTO `" + owned + "` (`ID`) VALUES " + marks);
+                copies.clear();
+                marks.clear();
+            };
+            for (auto const& [id, factor] : factors)
+            {
+                if (present.count(id))
+                    continue;
+                std::string row = "(";
+                for (uint32_t field = 0; field < dbc.fields; ++field)
+                {
+                    uint32_t const raw = dbc.Get(id, field);
+                    std::string const& type = columns[field].first;
+                    if (field)
+                        row += ",";
+                    if (type == "float")
+                    {
+                        float value;
+                        std::memcpy(&value, &raw, sizeof(value));
+                        char buffer[48];
+                        std::snprintf(buffer, sizeof(buffer), "%.9g", double(value));
+                        row += buffer;
+                    }
+                    else if (type == "varchar" || type == "text" || type == "char" || type == "mediumtext")
+                        row += "'" + Escape(dbc.String(raw)) + "'";
+                    else if (columns[field].second.find("unsigned") != std::string::npos)
+                        row += std::to_string(raw);
+                    else
+                        row += std::to_string(int32_t(raw));
+                }
+                row += ")";
+                copies += (copies.empty() ? "" : ",") + row;
+                marks += (marks.empty() ? "(" : ",(") + std::to_string(id) + ")";
+                ++copied;
+                if (copied % 200 == 0)
+                    flush();
+            }
+            flush();
+
+            Ledger ledger;
+            ledger.source = "spell_dbc";
+            ledger.backup = settings.prefix + "_spell";
+            ledger.comment = "The original numbers of the spells of items, and what the journey made of them";
+            ledger.keys = { "ID" };
+            ledger.columns = { { "MaxLevel" }, { "BaseLevel" }, { "SpellLevel" } };
+            for (int e = 1; e <= 3; ++e)
+                ledger.columns.push_back({ "EffectDieSides_" + std::to_string(e) });                     // 3..5
+            for (int e = 1; e <= 3; ++e)
+                ledger.columns.push_back({ "EffectRealPointsPerLevel_" + std::to_string(e), true });     // 6..8
+            for (int e = 1; e <= 3; ++e)
+                ledger.columns.push_back({ "EffectBasePoints_" + std::to_string(e) });                   // 9..11
+            for (int e = 1; e <= 3; ++e)
+                ledger.extras.push_back("s.`Effect_" + std::to_string(e) + "`");
+            for (int e = 1; e <= 3; ++e)
+                ledger.extras.push_back("s.`EffectAura_" + std::to_string(e) + "`");
+            ledger.where = "s.`ID` IN (SELECT `ID` FROM `" + wanted + "`)";
+
+            Tally const tally = Keep(db, ledger, [&](Entry const& entry)
+            {
+                std::vector<double> next = entry.orig;
+                auto factor = factors.find(uint32_t(Int(entry.keys[0])));
+                if (factor == factors.end())
+                    return next;
+                double const f = factor->second;
+                if (entry.orig[0] > 60)
+                    next[0] = LevelOf(int(entry.orig[0]));
+                next[1] = LevelOf(int(entry.orig[1]));
+                next[2] = LevelOf(int(entry.orig[2]));
+                for (size_t e = 0; e < 3; ++e)
+                {
+                    if (!IsAmountEffect(uint32_t(Int(entry.extra[e])), uint32_t(Int(entry.extra[3 + e]))))
+                        continue;
+                    // The amount of an effect is BasePoints + 1 .. BasePoints + DieSides.
+                    long const dieSides = std::lround(entry.orig[3 + e]), basePoints = std::lround(entry.orig[9 + e]);
+                    long const low = basePoints + (dieSides ? 1 : 0);
+                    long const newLow = std::lround(low * f);
+                    long const newSides = dieSides > 1 ? std::max(1L, std::lround(dieSides * f)) : dieSides;
+                    next[3 + e] = double(newSides);
+                    next[6 + e] = entry.orig[6 + e] * f;
+                    next[9 + e] = double(newLow - (newSides ? 1 : 0));
+                }
+                return next;
+            });
+
+            // What is no longer scaled and was only copied: out again (the ledger has just given it its originals).
+            db.execute("DELETE s FROM `spell_dbc` s JOIN `" + owned + "` o ON o.`ID` = s.`ID` WHERE o.`ID` NOT IN (SELECT `ID` FROM `" + wanted + "`)");
+            db.execute("DELETE FROM `" + ledger.backup + "` WHERE `ID` NOT IN (SELECT `ID` FROM `" + wanted + "`) AND `ID` IN (SELECT `ID` FROM `" + owned + "`)");
+            db.execute("DELETE FROM `" + owned + "` WHERE `ID` NOT IN (SELECT `ID` FROM `" + wanted + "`)");
+
+            for (auto const& [id, factor] : factors)
+                outcome.tooltipSpells.insert(id);
+            if (usable)
+                db.log(std::to_string(factors.size()) + " spell(s) of items scaled in spell_dbc, " + std::to_string(copied) +
+                    " copied there from Spell.dbc (" + std::to_string(tally.written) + " written)");
+        }
     }
 
-    void Run(Db const& db, Settings const& settings, PropertyPoints const& points, Outcome& outcome)
+    void Run(Db const& db, Settings const& settings, PropertyPoints const& points, DbcFile const& spellDbc, Outcome& outcome)
     {
         std::unordered_map<uint32_t, uint32_t> const maps = SpawnMaps(db);
+        std::unordered_map<uint32_t, int> const zoneShift = settings.enabled ? ZoneShift() : std::unordered_map<uint32_t, int>();
         Creatures(db, settings, maps, outcome);
         Items(db, settings, points, outcome);
-        Quests(db, settings, maps);
+        Quests(db, settings, maps, zoneShift, outcome);
         Trainers(db, settings);
         Battlegrounds(db, settings);
-        if (settings.enabled)
+        if (settings.enabled && settings.enchantments)
             Crafts(db, outcome);
+        Spells(db, settings, spellDbc, outcome);
+        Places(db, settings, zoneShift, outcome);
     }
 }

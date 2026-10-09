@@ -1,6 +1,7 @@
 ## Interface: 30300
 ## Title: Zone Levels
-## Notes: The world map shows the zone levels of the journey from 1 to 60.
+## Notes: World Journey: the world map shows the zone levels of the journey, gems and enchantments their real values.
 ## Author: mod-world-journey
-## Version: 1
+## Version: 2
+## SavedVariables: ZoneLevelsDB
 ZoneLevels.lua

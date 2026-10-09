@@ -1,25 +1,46 @@
 ###################################################################################################
 # mod-world-journey
 #
-# The classes of Conquest of Azeroth end at level 60. This module makes the whole world - the old
-# world, Outland and Northrend - one journey from 1 to 60:
+# THE CONCEPT
+#   Some class systems are made for level 60 only - above all the 21 classes of Conquest of Azeroth,
+#   whose talents, stats and spell ranks end there. Raising the level cap would stretch them past
+#   what they were made for. This module does the opposite: it compresses the world. The old world,
+#   Outland and Northrend become one journey from 1 to 60, and the classes stay as they were made.
 #
 #     the old world    zones open from  1 to 35 (instead of 1 to 55)
 #     Outland          zones open from 30 to 43 (instead of 58 to 67)
 #     Northrend        zones open from 40 to 55 (instead of 68 to 77)
 #     the raids and heroic dungeons of Outland and Northrend: at 60, after those of the old world
 #
-# Every zone stays open until 60: the scaling of CoA lifts what is below a character to that
-# character, as it always does. Creatures, quests, items, riding and the professions, instances,
-# the Dungeon Finder and the battlegrounds follow the journey; the classes stay as CoA made them.
+#   Every zone stays open until 60: a character above a zone meets its creatures lifted to its own
+#   level (CoA's open world scaling), each one in a window around the character - the weakest of a
+#   zone a little below, the strongest a little above.
 #
-# At every start, before the world reads its data, the world database is set to the journey. The
-# originals are kept in tables of the module (journey_creature, journey_quest, journey_item,
-# journey_trainer_spell, journey_battleground); a value that an update of the database changes is
-# taken as the new original. Switched off, the module puts every original back at the next start.
+# WHAT FOLLOWS THE JOURNEY
+#   Creatures (levels, money, base stats, the damage of their spells), quests, items (levels, stats,
+#   armor, damage, prices), potions, food and the spells of items, gems and enchantments, riding and
+#   the professions, instances, the Dungeon Finder, the battlegrounds, the random bots of
+#   mod-playerbots, and the world map of the client (addon ZoneLevels).
+#
+# HOW
+#   At every start, before the world reads its data, the module sets the world database to the
+#   journey. The originals are kept in tables of the module (journey_creature, journey_item,
+#   journey_quest, journey_trainer_spell, journey_battleground, journey_spell); a value an update of
+#   the database changes is taken as the new original. Change any regulator below and restart: the
+#   journey is computed anew from the originals. Switched off, every original comes back.
+#
+# WHAT THE MODULE CHECKS
+#   The journey ends at 60. With Journey.Guard.Enable the realm runs with MaxPlayerLevel 60, the
+#   Dungeon Finder with the dungeons of Outland and Northrend and Wintergrasp from 60, whatever the
+#   other config files say (with a warning in the log). The random bots of mod-playerbots end at 60
+#   too and keep travelling to Outland and Northrend (needs patches/playerbots-world-journey.patch).
 ###################################################################################################
 
 [worldserver]
+
+###################################################################################################
+# GENERAL
+###################################################################################################
 
 #
 #    Journey.Enable
@@ -32,8 +53,249 @@ Journey.Enable = 1
 
 #
 #    Journey.Debug
-#        Description: More detail in the log: every spell the module scales, and by how much.
+#        Description: More detail in the log: every spell the module scales in memory, and by how much.
 #        Default:     0 - Disabled
 #                     1 - Enabled
 
 Journey.Debug = 0
+
+#
+#    Journey.Guard.Enable
+#        Description: The realm runs with MaxPlayerLevel 60, DungeonFinder.MaxExpansion 2 and
+#                     Wintergrasp from 60, whatever worldserver.conf says. Leave it on unless you know
+#                     why: above 60 the classes of CoA have nothing to grow into.
+#        Default:     1 - Enabled
+#                     0 - Disabled
+
+Journey.Guard.Enable = 1
+
+###################################################################################################
+# THE SHAPE OF THE JOURNEY
+###################################################################################################
+
+#
+#    Journey.Classic.Range
+#    Journey.Outland.Range
+#    Journey.Northrend.Range
+#        Description: The levels at which the zones of a part open, from its first zone to its last,
+#                     as "from-to". The zones keep their order; the creatures, quests and items of a
+#                     part spread over its range the way they spread over the original one.
+#                     The old world was 1-55, Outland 58-67, Northrend 68-77.
+#        Default:     1-35, 30-43, 40-55
+
+Journey.Classic.Range = 1-35
+Journey.Outland.Range = 30-43
+Journey.Northrend.Range = 40-55
+
+#
+#    Journey.Endgame.Level
+#        Description: The level of the raids and heroic dungeons of Outland and Northrend (50-60).
+#        Default:     60
+
+Journey.Endgame.Level = 60
+
+#
+#    Journey.Endgame.BossLevels
+#        Description: How many levels above Journey.Endgame.Level their bosses stand (0-3), as the
+#                     bosses of raids always did.
+#        Default:     3
+
+Journey.Endgame.BossLevels = 3
+
+#
+#    Journey.Endgame.Outland.ItemLevels
+#    Journey.Endgame.Northrend.ItemLevels
+#        Description: The item levels of the rewards of the raids, heroics and arenas of Outland and of
+#                     Northrend at the end of the journey, as "lowest-highest". The raids of the old
+#                     world stay as they are (66 to 92), so the endgame is a ladder: the old world's
+#                     raids, then Outland's, then Northrend's.
+#        Default:     75-110, 95-140
+
+Journey.Endgame.Outland.ItemLevels = 75-110
+Journey.Endgame.Northrend.ItemLevels = 95-140
+
+#
+#    Journey.Zone.<zone id>
+#        Description: The entry level of a single zone, set by hand (zone ids: AreaTable.dbc, or
+#                     .gps in the game). Its creatures and quests move with it; the bots and the
+#                     world map follow. Entries are kept below Journey.Endgame.Level - 5.
+#        Example:     Journey.Zone.3483 = 32    (Hellfire Peninsula from 32)
+#        Default:     none
+
+#
+#    Journey.Instance.<map id>
+#        Description: The entry level of a single instance, set by hand. Its creatures move with it;
+#                     the Dungeon Finder follows.
+#        Example:     Journey.Instance.543 = 31    (Hellfire Ramparts from 31)
+#        Default:     none
+
+###################################################################################################
+# THE WINDOW AND THE SCALING OF CoA
+###################################################################################################
+
+#
+#    Journey.Scaling.Forced
+#        Description: Every character plays the scaled world: CoA's open world scaling is on for
+#                     everyone, from the creation of a character, and the Destiny Weaver no longer
+#                     offers to switch it off. Without it each character chooses at the Destiny
+#                     Weaver, as CoA does it. Needs patches/core-level-window.patch.
+#        Default:     1 - Forced
+#                     0 - Each character's choice
+
+Journey.Scaling.Forced = 1
+
+#
+#    Journey.Window.Enable
+#    Journey.Window.Below
+#    Journey.Window.Above
+#        Description: Where a creature lifted to a character stands. Without the window CoA puts every
+#                     lifted creature DestinyWeaver.Scaling.Offset levels below the character. With it,
+#                     a creature keeps its place in its zone: the weakest of a zone stand Below levels
+#                     under the character, the strongest Above levels over it, elites and rares one
+#                     more. A creature is never set below its own level. Needs
+#                     patches/core-level-window.patch. Below and Above: 0-10.
+#        Default:     1 - Enabled, 2 below, 2 above
+
+Journey.Window.Enable = 1
+Journey.Window.Below = 2
+Journey.Window.Above = 2
+
+###################################################################################################
+# CREATURES AND THEIR DIFFICULTY
+###################################################################################################
+
+#
+#    Journey.Creatures.BaseStats
+#        Description: The base stats (health, damage, armor) creatures of Outland and Northrend take on
+#                     the way.
+#                     journey  - those of the old world, which rise evenly to 60. Recommended: the
+#                                tables of Outland and Northrend have gaps and jumps below 60.
+#                     original - those of their own game.
+#                     The raids and heroics of Outland and Northrend always keep those of their game:
+#                     they are the harder end.
+#        Default:     journey
+
+Journey.Creatures.BaseStats = journey
+
+#
+#    Journey.Difficulty.<Rank>.<Stat>
+#    Journey.Difficulty.<Part>.<Rank>.<Stat>
+#        Description: Multipliers for how hard creatures are, on top of their base stats and of the
+#                     Rate.Creature.* of worldserver.conf. Written into creature_template
+#                     (HealthModifier, DamageModifier, ArmorModifier), so CoA's scaling honours them.
+#                     Rank:  Normal, Elite, RareElite, WorldBoss, Rare
+#                     Stat:  Health, Damage, SpellDamage, Armor
+#                     Part:  OldWorld, Outland, Northrend, Endgame - a multiplier for one part wins over
+#                            the general one.
+#                     Range: 0.05-20.
+#        Example:     Journey.Difficulty.Elite.Health = 1.3
+#                     Journey.Difficulty.Endgame.Normal.Damage = 1.2
+#        Default:     1.0 everywhere, but rares and rare elites: Health 1.5, Damage 1.25,
+#                     SpellDamage 1.25
+
+Journey.Difficulty.Normal.Health = 1.0
+Journey.Difficulty.Normal.Damage = 1.0
+Journey.Difficulty.Normal.SpellDamage = 1.0
+Journey.Difficulty.Normal.Armor = 1.0
+Journey.Difficulty.Elite.Health = 1.0
+Journey.Difficulty.Elite.Damage = 1.0
+Journey.Difficulty.Elite.SpellDamage = 1.0
+Journey.Difficulty.Elite.Armor = 1.0
+Journey.Difficulty.RareElite.Health = 1.5
+Journey.Difficulty.RareElite.Damage = 1.25
+Journey.Difficulty.RareElite.SpellDamage = 1.25
+Journey.Difficulty.RareElite.Armor = 1.0
+Journey.Difficulty.WorldBoss.Health = 1.0
+Journey.Difficulty.WorldBoss.Damage = 1.0
+Journey.Difficulty.WorldBoss.SpellDamage = 1.0
+Journey.Difficulty.WorldBoss.Armor = 1.0
+Journey.Difficulty.Rare.Health = 1.5
+Journey.Difficulty.Rare.Damage = 1.25
+Journey.Difficulty.Rare.SpellDamage = 1.25
+Journey.Difficulty.Rare.Armor = 1.0
+
+#
+#    The table journey_difficulty (world database) sets the same for a single map or creature:
+#        entry  - 0 for a whole map, else a creature entry
+#        map    - the map id (with entry 0)
+#        health, damage, spell, armor - multipliers (spell = SpellDamage), -1 = as above
+#    It is created empty; changes take effect at the next start.
+
+###################################################################################################
+# QUESTS
+###################################################################################################
+
+#
+#    Journey.Quests.XpRate
+#    Journey.Quests.XpRate.<Part>
+#        Description: The experience of quests, on top of Rate.XP.Quest. Part: OldWorld, Outland,
+#                     Northrend, Endgame - for one part, wins over the general one. Range 0-10.
+#        Default:     1.0
+
+Journey.Quests.XpRate = 1.0
+
+###################################################################################################
+# WHAT FOLLOWS THE JOURNEY
+###################################################################################################
+
+#
+#    Journey.Items.Enable
+#        Description: Items follow the journey: required level, item level, stats, armor, damage, price.
+#        Default:     1 - Enabled
+
+Journey.Items.Enable = 1
+
+#
+#    Journey.Consumables.Enable
+#        Description: Potions, food, elixirs, flasks, bandages and the like - and the spells of
+#                     trinkets and procs - heal, feed and give what an item of their new level gives.
+#        Default:     1 - Enabled
+
+Journey.Consumables.Enable = 1
+
+#
+#    Journey.Enchantments.Enable
+#        Description: Gems, socket bonuses and the enchantments of the professions of Outland and
+#                     Northrend, by what the top rewards of their game keep of their stats.
+#        Default:     1 - Enabled
+
+Journey.Enchantments.Enable = 1
+
+#
+#    Journey.Trainers.Enable
+#        Description: Riding and the professions are taught on the journey: riding at 13 and 26,
+#                     flying at 33 and 47, cold weather flying at 55, a grand master at 40. The class
+#                     trainers are not touched.
+#        Default:     1 - Enabled
+
+Journey.Trainers.Enable = 1
+
+#
+#    Journey.Battlegrounds.Enable
+#        Description: The Eye of the Storm, the Strand of the Ancients, the Isle of Conquest and
+#                     Wintergrasp open at 60.
+#        Default:     1 - Enabled
+
+Journey.Battlegrounds.Enable = 1
+
+###################################################################################################
+# THE CLIENT
+###################################################################################################
+
+#
+#    Journey.Map.Enable
+#        Description: The addon ZoneLevels learns the zone levels of the journey at login and shows
+#                     them on the world map.
+#        Default:     1 - Enabled
+
+Journey.Map.Enable = 1
+
+#
+#    Journey.Tooltips.Enable
+#        Description: The tooltips show what the journey made of an item's spells, gems and
+#                     enchantments. The spells of items go into spell_dbc and to the client with CoA's
+#                     spell patches; gems and enchantments go to the addon ZoneLevels. Off: they work
+#                     the same, but the tooltips keep the old numbers.
+#        Default:     1 - Enabled
+
+Journey.Tooltips.Enable = 1

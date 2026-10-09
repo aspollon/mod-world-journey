@@ -1,0 +1,108 @@
+diff --git a/src/Mgr/Travel/TravelMgr.cpp b/src/Mgr/Travel/TravelMgr.cpp
+index 3df4c40d..dc1fe1e0 100644
+--- a/src/Mgr/Travel/TravelMgr.cpp
++++ b/src/Mgr/Travel/TravelMgr.cpp
+@@ -5,6 +5,7 @@
+  */
+ 
+ #include "TravelMgr.h"
++#include "DatabaseEnv.h"
+ #include "AreaDefines.h"
+ #include "CellImpl.h"
+ #include "ChatHelper.h"
+@@ -4643,6 +4644,19 @@ void TravelMgr::PrepareZone2LevelBracket()
+     for (auto const& [zoneId, bracketPair] : sPlayerbotAIConfig.zoneBrackets)
+         zone2LevelBracket[zoneId] = {bracketPair.first, bracketPair.second};
+ 
++    // World Journey (mod-world-journey) lays the whole world over the levels up to 60, Outland and Northrend
++    // included, and writes every zone's bracket into the world database at every start: those win.
++    std::set<uint32> journeyZones;
++    if (WorldDatabase.Query("SHOW TABLES LIKE 'journey_zone'"))
++        if (QueryResult result = WorldDatabase.Query("SELECT `zone`, `bot_min`, `bot_max` FROM `journey_zone` WHERE `bot_min` > 0"))
++            do
++            {
++                Field* fields = result->Fetch();
++                uint32 const zoneId = fields[0].Get<uint32>();
++                zone2LevelBracket[zoneId] = {fields[1].Get<uint8>(), fields[2].Get<uint8>()};
++                journeyZones.insert(zoneId);
++            } while (result->NextRow());
++
+     // A realm whose bots stop at 60 (Conquest of Azeroth) has no Burning Crusade or Wrath content to send them
+     // to, whatever an older playerbots.conf says: level 58-60 bots were teleported to Hellfire Peninsula and
+     // Zangarmarsh (Zyth45/mod-playerbots#14). The Blood Elf and Draenei zones stay.
+@@ -4652,7 +4666,8 @@ void TravelMgr::PrepareZone2LevelBracket()
+                               AREA_DRAGONBLIGHT, AREA_ZUL_DRAK, AREA_THE_STORM_PEAKS, 210u, AREA_GRIZZLY_HILLS,
+                               AREA_HOWLING_FJORD, AREA_CRYSTALSONG_FOREST, AREA_BOREAN_TUNDRA, AREA_SHOLAZAR_BASIN,
+                               AREA_WINTERGRASP})
+-            zone2LevelBracket.erase(zoneId);
++            if (!journeyZones.count(zoneId))
++                zone2LevelBracket.erase(zoneId);
+ }
+ 
+ void TravelMgr::PrepareDestinationCache()
+diff --git a/src/PlayerbotAIConfig.cpp b/src/PlayerbotAIConfig.cpp
+index 35799721..893f919e 100644
+--- a/src/PlayerbotAIConfig.cpp
++++ b/src/PlayerbotAIConfig.cpp
+@@ -18,10 +18,28 @@
+ #include "RandomPlayerbotMgr.h"
+ #include "Talentspec.h"
+ #include "TravelMgr.h"
++#include "DatabaseEnv.h"
+ #include <cctype>
++#include <map>
+ #include <iostream>
+ #include <sstream>
+ 
++namespace
++{
++    // World Journey (mod-world-journey) writes the levels of its journey into the world database at every start.
++    std::map<std::string, int32> WorldJourneyBotLevels()
++    {
++        std::map<std::string, int32> levels;
++        if (!WorldDatabase.Query("SHOW TABLES LIKE 'journey_bot'"))
++            return levels;
++        if (QueryResult result = WorldDatabase.Query("SELECT `name`, `value` FROM `journey_bot`"))
++            do
++                levels[(*result)[0].Get<std::string>()] = (*result)[1].Get<int32>();
++            while (result->NextRow());
++        return levels;
++    }
++}
++
+ template <class T>
+ void LoadList(std::string const value, T& list)
+ {
+@@ -416,6 +434,13 @@ bool PlayerbotAIConfig::Initialize()
+     randomBotMaxLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.RandomBotMaxLevel", 80);
+     if (randomBotMaxLevel > sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL))
+         randomBotMaxLevel = sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL);
++    std::map<std::string, int32> const journey = WorldJourneyBotLevels();
++    if (auto top = journey.find("max_level"); top != journey.end() && randomBotMaxLevel > top->second)
++    {
++        LOG_WARN("server.loading", "World Journey: the random bots stop at {}, not at {} (AiPlayerbot.RandomBotMaxLevel)",
++            top->second, randomBotMaxLevel);
++        randomBotMaxLevel = top->second;
++    }
+ 
+     // Bracket defaults (below) derive from randomBotMaxLevel, so this must run after it is read.
+     LoadRandomBotLevelConfig();
+@@ -477,6 +502,18 @@ bool PlayerbotAIConfig::Initialize()
+     useFastGroundMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFastGroundMountAtMinLevel", 40);
+     useFlyMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFlyMountAtMinLevel", 60);
+     useFastFlyMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFastFlyMountAtMinLevel", 70);
++    // World Journey: the bots ride and fly when the journey's riding trainers let a character.
++    for (auto const& [name, level] : journey)
++    {
++        if (name == "ground_mount")
++            useGroundMountAtMinLevel = level;
++        else if (name == "fast_ground_mount")
++            useFastGroundMountAtMinLevel = level;
++        else if (name == "fly_mount")
++            useFlyMountAtMinLevel = level;
++        else if (name == "fast_fly_mount")
++            useFastFlyMountAtMinLevel = level;
++    }
+ 
+     // stagger bot flightpath takeoff
+     botTaxiDelayMin = sConfigMgr->GetOption<uint32>("AiPlayerbot.BotTaxiDelayMinMs", 350);
