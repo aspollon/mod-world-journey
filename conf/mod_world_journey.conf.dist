@@ -130,7 +130,7 @@ Journey.Endgame.Northrend.ItemLevels = 95-140
 #        Default:     none
 
 ###################################################################################################
-# THE WINDOW AND THE SCALING OF CoA
+# THE LEVEL WINDOW AND FORCED SCALING
 ###################################################################################################
 
 #
@@ -178,15 +178,15 @@ Journey.Window.Above = 2
 Journey.Creatures.BaseStats = journey
 
 #
-#    Journey.Difficulty.<Rank>.<Stat>
-#    Journey.Difficulty.<Part>.<Rank>.<Stat>
 #        Description: Multipliers for how hard creatures are, on top of their base stats and of the
 #                     Rate.Creature.* of worldserver.conf. Written into creature_template
 #                     (HealthModifier, DamageModifier, ArmorModifier), so CoA's scaling honours them.
+#                     The options are named Journey.Difficulty.Rank.Stat; one for a single part of
+#                     the world is named Journey.Difficulty.Part.Rank.Stat and wins over the general
+#                     one (add it to this file by hand).
 #                     Rank:  Normal, Elite, RareElite, WorldBoss, Rare
 #                     Stat:  Health, Damage, SpellDamage, Armor
-#                     Part:  OldWorld, Outland, Northrend, Endgame - a multiplier for one part wins over
-#                            the general one.
+#                     Part:  OldWorld, Outland, Northrend, Endgame
 #                     Range: 0.05-20.
 #        Example:     Journey.Difficulty.Elite.Health = 1.3
 #                     Journey.Difficulty.Endgame.Normal.Damage = 1.2
@@ -242,6 +242,7 @@ Journey.Quests.XpRate = 1.0
 #    Journey.Items.Enable
 #        Description: Items follow the journey: required level, item level, stats, armor, damage, price.
 #        Default:     1 - Enabled
+#                     0 - Disabled
 
 Journey.Items.Enable = 1
 
@@ -250,6 +251,7 @@ Journey.Items.Enable = 1
 #        Description: Potions, food, elixirs, flasks, bandages and the like - and the spells of
 #                     trinkets and procs - heal, feed and give what an item of their new level gives.
 #        Default:     1 - Enabled
+#                     0 - Disabled
 
 Journey.Consumables.Enable = 1
 
@@ -258,6 +260,7 @@ Journey.Consumables.Enable = 1
 #        Description: Gems, socket bonuses and the enchantments of the professions of Outland and
 #                     Northrend, by what the top rewards of their game keep of their stats.
 #        Default:     1 - Enabled
+#                     0 - Disabled
 
 Journey.Enchantments.Enable = 1
 
@@ -267,6 +270,7 @@ Journey.Enchantments.Enable = 1
 #                     flying at 33 and 47, cold weather flying at 55, a grand master at 40. The class
 #                     trainers are not touched.
 #        Default:     1 - Enabled
+#                     0 - Disabled
 
 Journey.Trainers.Enable = 1
 
@@ -275,6 +279,7 @@ Journey.Trainers.Enable = 1
 #        Description: The Eye of the Storm, the Strand of the Ancients, the Isle of Conquest and
 #                     Wintergrasp open at 60.
 #        Default:     1 - Enabled
+#                     0 - Disabled
 
 Journey.Battlegrounds.Enable = 1
 
@@ -287,6 +292,7 @@ Journey.Battlegrounds.Enable = 1
 #        Description: The addon ZoneLevels learns the zone levels of the journey at login and shows
 #                     them on the world map.
 #        Default:     1 - Enabled
+#                     0 - Disabled
 
 Journey.Map.Enable = 1
 
@@ -297,5 +303,6 @@ Journey.Map.Enable = 1
 #                     spell patches; gems and enchantments go to the addon ZoneLevels. Off: they work
 #                     the same, but the tooltips keep the old numbers.
 #        Default:     1 - Enabled
+#                     0 - Disabled
 
 Journey.Tooltips.Enable = 1
