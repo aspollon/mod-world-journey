@@ -197,6 +197,19 @@ namespace
         }
         if (runtime.battlegrounds && sWorld->getIntConfig(CONFIG_WINTERGRASP_PLR_MIN_LVL) > 60)
             sWorld->setIntConfig(CONFIG_WINTERGRASP_PLR_MIN_LVL, 60);
+        if (sConfigMgr->GetOption<bool>("CoA.CreatureScaling.Enable", false, false))
+        {
+            auto factor = [](char const* key, float fallback)
+            {
+                std::ostringstream text;
+                text << sConfigMgr->GetOption<float>(key, fallback, false);
+                return text.str();
+            };
+            Say("CoA's creature multipliers (coa.conf) are on as well, on top of the journey's difficulty: open world health x" +
+                factor("CoA.CreatureScaling.World.Health", 2.5f) + ", damage x" + factor("CoA.CreatureScaling.World.Damage", 2.0f) +
+                "; dungeons health x" + factor("CoA.CreatureScaling.Dungeon.Health", 2.5f) + ", damage x" +
+                factor("CoA.CreatureScaling.Dungeon.Damage", 1.5f) + " (CoA.CreatureScaling.Enable = 0 leaves the journey's own)");
+        }
 #ifdef LOCAL_LEVEL_SCALING_WORLD_JOURNEY
         LocalLevelScaling::ScalingChoiceForced.store(runtime.forced, std::memory_order_relaxed);
 #else

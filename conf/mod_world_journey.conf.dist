@@ -193,6 +193,14 @@ Journey.Creatures.BaseStats = journey
 #                     Journey.Difficulty.Endgame.Normal.Damage = 1.2
 #        Default:     1.0 everywhere, but rares and rare elites: Health 1.5, Damage 1.25,
 #                     SpellDamage 1.25
+#
+#        CoA's own:   CoA has creature multipliers of its own, in coa.conf (CoA.CreatureScaling.*,
+#                     since October 2026). They come on top of these: with them on, every creature
+#                     of the open world has 2.5 times its health and hits players and pets twice as
+#                     hard; in dungeons 2.5 times the health (some up to 5) and half again the
+#                     damage. A rare then has 3.75 times its health. AFK Realm switches them off
+#                     with World Journey; to play the harder world, set in coa.conf
+#                     CoA.CreatureScaling.Enable = 1 (and tune its World/Dungeon/Raid values).
 
 Journey.Difficulty.Normal.Health = 1.0
 Journey.Difficulty.Normal.Damage = 1.0

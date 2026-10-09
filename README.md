@@ -95,6 +95,12 @@ dungeons scale, and lifted creatures stand where CoA puts them.
 The module itself lowers: it compresses the world database for everyone, scaling on or off. CoA's scaling then lifts
 what is left behind.
 
+CoA also has creature multipliers of its own (`CoA.CreatureScaling.*` in coa.conf, since October 2026). They multiply on
+top of the journey's difficulty: with them on, creatures of the open world have 2.5 times their health and hit players
+and pets twice as hard, dungeon creatures 2.5 times their health (some maps up to 5) and half again the damage. AFK
+Realm switches them off with the module (`CoA.CreatureScaling.Enable = 0`); set it to 1 to play that harder world. The
+log says at every start when both are on.
+
 `patches/core-lottery-link.patch` has nothing to do with the journey: CoA's lottery module (October 2026) misses an
 include and does not link with Visual Studio. AFK Realm leaves the patch out by itself once CoA has the fix.
 
@@ -137,7 +143,8 @@ The first start with the module takes about a minute longer than usual; later st
 
 **With [AFK Realm](https://github.com/aspollon/AFK-Realm):** add the module. AFK Realm reads `afk-realm.json`: it
 applies the patches, and sets `MaxPlayerLevel`, `DungeonFinder.MaxExpansion`, `Wintergrasp.PlayerMinLvl`,
-`AiPlayerbot.RandomBotMaxLevel` and `DestinyWeaver.Scaling.Offset` in the other config files.
+`AiPlayerbot.RandomBotMaxLevel`, `DestinyWeaver.Scaling.Offset` and `CoA.CreatureScaling.Enable` in the other config
+files.
 
 **By hand:**
 

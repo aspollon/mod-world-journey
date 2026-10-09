@@ -50,6 +50,12 @@
       "key": "DestinyWeaver.Scaling.Offset",
       "value": "2",
       "why": "Without the level window, lifted creatures stand two levels below a character instead of three."
+    },
+    {
+      "file": "coa.conf",
+      "key": "CoA.CreatureScaling.Enable",
+      "value": "0",
+      "why": "World Journey sets the difficulty of the journey itself. CoA's own creature multipliers come on top: with them on, creatures of the open world have 2.5 times their health and hit twice as hard. To play that harder world, set CoA.CreatureScaling.Enable = 1 in coa.conf."
     }
   ],
   "client": {
