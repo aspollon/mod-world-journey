@@ -3,6 +3,8 @@
 --   B                     a new set begins
 --   Z<key>=<lo>-<hi>;...  the levels of zones, as the world map knows them (WORLD_MAP_LEVELS)
 --   E<before>~<after>     a line of a gem or an enchantment: what it said, what it gives now
+--   L<id>=<min>-<max>-<recommended>;...   the levels of the Dungeon Finder's dungeons (LFGDungeons.dbc of the
+--                         client still holds the original ones, and the Dungeon Finder hides what it thinks is too high)
 --   D                     the set is complete
 -- The last complete set is kept, so the map is right even before the server has spoken.
 
@@ -17,6 +19,51 @@ local function Apply(db)
             WORLD_MAP_LEVELS[key] = { levels[1], levels[2] }
         end
     end
+end
+
+-- The Dungeon Finder: every place that reads the levels of a dungeon gets the ones of the journey.
+-- Fields of GetLFGDungeonInfo: 3 min level, 4 max level, 5 recommended, 6 lowest recommended, 7 highest recommended.
+local function DungeonLevels(id)
+    local all = ZoneLevelsDB and ZoneLevelsDB.dungeons
+    return all and all[id]
+end
+
+local function PatchDungeon(id, info)
+    local l = DungeonLevels(id)
+    if not l or type(info) ~= "table" then return end
+    info[3], info[4], info[5] = l[1], l[2], l[3]
+    info[6], info[7] = l[1], math.min(l[2], l[3] + 3)
+end
+
+local function pack(...) return { n = select("#", ...), ... } end
+
+if type(GetLFGDungeonInfo) == "function" then
+    local original = GetLFGDungeonInfo
+    GetLFGDungeonInfo = function(id, ...)
+        if not DungeonLevels(id) then return original(id, ...) end
+        local info = pack(original(id, ...))
+        PatchDungeon(id, info)
+        return unpack(info, 1, info.n)
+    end
+end
+
+if type(GetLFDChoiceInfo) == "function" then
+    local original = GetLFDChoiceInfo
+    GetLFDChoiceInfo = function(...)
+        local all = original(...)
+        if type(all) == "table" then
+            for id, info in pairs(all) do PatchDungeon(id, info) end
+        end
+        return all
+    end
+end
+
+-- Data that came after the Dungeon Finder read its list: patch what it holds and let it list again.
+local function RefreshDungeonFinder()
+    if type(LFGDungeonInfo) == "table" then
+        for id, info in pairs(LFGDungeonInfo) do PatchDungeon(id, info) end
+    end
+    if type(LFDQueueFrame_Update) == "function" then pcall(LFDQueueFrame_Update) end
 end
 
 local function Retext(tooltip)
@@ -60,12 +107,16 @@ frame:SetScript("OnEvent", function(self, event, prefix, message, channel, sende
     if prefix ~= PREFIX or type(message) ~= "string" then return end
     local kind, body = message:sub(1, 1), message:sub(2)
     if kind == "B" then
-        pending = { zones = {}, texts = {} }
+        pending = { zones = {}, texts = {}, dungeons = {} }
     elseif not pending then
         return
     elseif kind == "Z" then
         for key, lo, hi in body:gmatch("([%w_]+)=(%d+)%-(%d+);") do
             pending.zones[key] = { tonumber(lo), tonumber(hi) }
+        end
+    elseif kind == "L" then
+        for id, lo, hi, rec in body:gmatch("(%d+)=(%d+)%-(%d+)%-(%d+);") do
+            pending.dungeons[tonumber(id)] = { tonumber(lo), tonumber(hi), tonumber(rec) }
         end
     elseif kind == "E" then
         local before, after = body:match("^(.-)~(.*)$")
@@ -74,5 +125,6 @@ frame:SetScript("OnEvent", function(self, event, prefix, message, channel, sende
         ZoneLevelsDB = pending
         pending = nil
         Apply(ZoneLevelsDB)
+        RefreshDungeonFinder()
     end
 end)

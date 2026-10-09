@@ -59,8 +59,8 @@ originals.
 - **Battlegrounds.** The Eye of the Storm, the Strand of the Ancients, the Isle of Conquest and Wintergrasp open at 60.
 - **Bots.** With mod-playerbots, the random bots stop at 60, hunt in each zone at its new levels - Outland and
   Northrend included - and mount and fly when the players can.
-- **The client.** The world map shows the new zone levels, and the tooltips the real values of an item's spells,
-  gems and enchantments.
+- **The client.** The world map shows the new zone levels, the Dungeon Finder the dungeons at their new levels, and
+  the tooltips the real values of an item's spells, gems and enchantments.
 
 ## What the module checks
 
@@ -104,10 +104,12 @@ The first start with the module takes about a minute longer than usual; later st
   their tooltips are right. Gems and enchantments are corrected by the addon `ZoneLevels`; without it they show the
   old numbers (what counts is what the server applies). Items show their new values once the client's cache is
   cleared.
-- **The Dungeon Finder window** of the client may still show the original level ranges of Outland's and Northrend's
-  dungeons; the server decides who may queue.
-- **The PvP window** may still show the newer battlegrounds as closed below their original level; the battlemasters
-  let a character of 60 in.
+- **The Dungeon Finder** of the client reads its levels from its own LFGDungeons.dbc, which still holds the original
+  ones - and it hides every dungeon outside them, so a character of 35 would not even see Outland's dungeons. The add-on
+  ZoneLevels gives it the levels of the journey, which the server sends at login. Without the add-on, the specific
+  dungeons of Outland and Northrend do not show up in the list before 59; the server lets a character in either way.
+- **Battlegrounds** are queued in CoA through random battlegrounds and holiday battlegrounds, whose choice the server
+  makes; the client shows no levels of its own for them.
 - **Balance** is worked out from the data, not played: how hard the raids of Outland and Northrend are at 60 and how
   strong their rewards are will need a look in the game - that is what the difficulty regulators are for.
 - The consumables of the old world move with it: a Flask of the Titans now belongs to the middle of the journey.

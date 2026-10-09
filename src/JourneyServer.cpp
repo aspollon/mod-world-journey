@@ -71,6 +71,11 @@ namespace
     std::unordered_map<uint32, int> mapShift;                       // instance set by hand -> levels moved
     std::vector<std::pair<std::string, std::string>> enchantTexts;  // what a gem or enchantment says, before and after
 
+    /// What the Dungeon Finder of the client has to show: its levels come from the client's own LFGDungeons.dbc, which
+    /// still holds the original ones and hides the dungeons of Outland and Northrend from a character below 59.
+    struct DungeonLevels { uint32 id; uint8 min, max, rec; };
+    std::vector<DungeonLevels> dungeonLevels;
+
     void Say(std::string const& line)
     {
         LOG_INFO("server.loading", ">> World Journey: {}", line);
@@ -505,8 +510,17 @@ namespace
 
     /// The Dungeon Finder offers every dungeon from its new entry level to 60; a random dungeon from the lowest
     /// entry among the dungeons it draws from.
+    /// The level a dungeon is meant for, a few levels above its entry as it was before the journey (the journey
+    /// is about two thirds as long as the original road).
+    uint8 Recommended(LFGDungeonEntry const* dbc, uint8 min, uint8 max)
+    {
+        int const above = std::max<int>(0, int(dbc->TargetLevel) - int(dbc->MinLevel));
+        return uint8(std::clamp<int>(min + int(std::lround(above * 0.65)), min, max));
+    }
+
     void SetDungeonFinder()
     {
+        dungeonLevels.clear();
         std::map<std::pair<uint32, uint32>, uint8> entries;
         for (journey::InstanceData const& instance : journey::Instances)
             entries[{ instance.map, instance.difficulty }] = uint8(EntryOf(instance));
@@ -529,6 +543,7 @@ namespace
                 continue;
             dungeon->minlevel = entry->second;
             dungeon->maxlevel = std::max<uint8>(dungeon->minlevel, top);
+            dungeonLevels.push_back({ dbc->ID, dungeon->minlevel, dungeon->maxlevel, Recommended(dbc, dungeon->minlevel, dungeon->maxlevel) });
             auto& lowest = lowestOfGroup.try_emplace({ dungeon->group, uint8(dungeon->difficulty) }, dungeon->minlevel).first->second;
             lowest = std::min(lowest, dungeon->minlevel);
             ++changed;
@@ -540,6 +555,8 @@ namespace
                 continue;
             random->minlevel = lowest->second;
             random->maxlevel = std::max<uint8>(random->minlevel, top);
+            if (LFGDungeonEntry const* dbc = sLFGDungeonStore.LookupEntry(random->id))
+                dungeonLevels.push_back({ dbc->ID, random->minlevel, random->maxlevel, Recommended(dbc, random->minlevel, random->maxlevel) });
             ++changed;
         }
         Say(std::to_string(changed) + " entr(ies) of the Dungeon Finder on the journey");
@@ -670,6 +687,21 @@ namespace
             }
             if (!chunk.empty())
                 SendAddon(player, "Z" + chunk);
+        }
+        {
+            std::string chunk;
+            for (DungeonLevels const& d : dungeonLevels)
+            {
+                std::string const part = std::to_string(d.id) + "=" + std::to_string(d.min) + "-" + std::to_string(d.max) + "-" + std::to_string(d.rec) + ";";
+                if (chunk.size() + part.size() > 230)
+                {
+                    SendAddon(player, "L" + chunk);
+                    chunk.clear();
+                }
+                chunk += part;
+            }
+            if (!chunk.empty())
+                SendAddon(player, "L" + chunk);
         }
         if (runtime.tooltips)
             for (auto const& [before, after] : enchantTexts)

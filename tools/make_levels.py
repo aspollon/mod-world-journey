@@ -120,8 +120,9 @@ manifest = {
          'why': 'Without the level window, lifted creatures stand two levels below a character instead of three.'},
     ],
     'client': {'addons': [f'client/AddOns/{ADDON}'], 'clearCache': True,
-               'why': 'The world map shows the zone levels of the journey and gems and enchantments show their real '
-                      'values; the cache of the client forgets the old levels of items, creatures and quests.'},
+               'why': 'The world map shows the zone levels of the journey, the Dungeon Finder its dungeons at their new levels and '
+                      'gems and enchantments their real values; the cache of the client forgets the old levels of items, '
+                      'creatures and quests.'},
 }
 with open(os.path.join(root, 'afk-realm.json'), 'w', newline='\n') as f:
     json.dump(manifest, f, indent=2)
