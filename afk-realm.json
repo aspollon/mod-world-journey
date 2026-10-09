@@ -1,6 +1,13 @@
 {
   "about": "Read by AFK Realm (https://github.com/aspollon/AFK-Realm) when it builds the server. Without AFK Realm, set these values by hand and copy the addon into the client: see README.md.",
-  "patches": [],
+  "patches": [
+    {
+      "name": "Bots in Outland and Northrend below 61",
+      "target": "mod-playerbots",
+      "file": "patches/playerbots-zone-brackets.patch",
+      "why": "With bots capped at 60, the CoA branch of Playerbots drops every zone of Outland and Northrend; with this patch a zone keeps the bracket the config gives it."
+    }
+  ],
   "settings": [
     {
       "file": "worldserver.conf",

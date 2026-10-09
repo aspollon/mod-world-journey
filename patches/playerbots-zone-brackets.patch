@@ -1,0 +1,22 @@
+diff --git a/src/Mgr/Travel/TravelMgr.cpp b/src/Mgr/Travel/TravelMgr.cpp
+index 3df4c40d..19cecea5 100644
+--- a/src/Mgr/Travel/TravelMgr.cpp
++++ b/src/Mgr/Travel/TravelMgr.cpp
+@@ -4646,13 +4646,16 @@ void TravelMgr::PrepareZone2LevelBracket()
+     // A realm whose bots stop at 60 (Conquest of Azeroth) has no Burning Crusade or Wrath content to send them
+     // to, whatever an older playerbots.conf says: level 58-60 bots were teleported to Hellfire Peninsula and
+     // Zangarmarsh (Zyth45/mod-playerbots#14). The Blood Elf and Draenei zones stay.
++    // A zone the config gives a bracket of its own (a realm that brings Outland and Northrend into the levels up to
++    // 60) keeps it.
+     if (sPlayerbotAIConfig.randomBotMaxLevel <= 60)
+         for (uint32 zoneId : std::initializer_list<uint32>{AREA_HELLFIRE_PENINSULA, AREA_NAGRAND, AREA_TEROKKAR_FOREST, AREA_SHADOWMOON_VALLEY,
+                               AREA_ZANGARMARSH, AREA_BLADES_EDGE_MOUNTAINS, AREA_NETHERSTORM, AREA_ISLE_OF_QUEL_DANAS,
+                               AREA_DRAGONBLIGHT, AREA_ZUL_DRAK, AREA_THE_STORM_PEAKS, 210u, AREA_GRIZZLY_HILLS,
+                               AREA_HOWLING_FJORD, AREA_CRYSTALSONG_FOREST, AREA_BOREAN_TUNDRA, AREA_SHOLAZAR_BASIN,
+                               AREA_WINTERGRASP})
+-            zone2LevelBracket.erase(zoneId);
++            if (!sPlayerbotAIConfig.zoneBrackets.count(zoneId))
++                zone2LevelBracket.erase(zoneId);
+ }
+ 
+ void TravelMgr::PrepareDestinationCache()

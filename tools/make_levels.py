@@ -113,7 +113,8 @@ for line in open(os.path.join(data, 'source_bot_zones.tsv')):
     settings.append(('playerbots.conf', f'AiPlayerbot.ZoneBracket.{zone}', f'{lo},{max(lo, hi)}', f'Random bots go to {name} at the levels of the journey.'))
 manifest = {
     'about': 'Read by AFK Realm (https://github.com/aspollon/AFK-Realm) when it builds the server. Without AFK Realm, set these values by hand and copy the addon into the client: see README.md.',
-    'patches': [],
+    'patches': [{'name': 'Bots in Outland and Northrend below 61', 'target': 'mod-playerbots', 'file': 'patches/playerbots-zone-brackets.patch',
+                 'why': 'With bots capped at 60, the CoA branch of Playerbots drops every zone of Outland and Northrend; with this patch a zone keeps the bracket the config gives it.'}],
     'settings': [{'file': f, 'key': k, 'value': v, 'why': w} for f, k, v, w in settings],
     'client': {'addons': [f'client/AddOns/{ADDON}'], 'clearCache': True,
                'why': 'The world map shows the zone levels of the journey; the cache of the client forgets the old levels of items, creatures and quests.'},

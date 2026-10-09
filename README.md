@@ -49,7 +49,8 @@ checked, run twice, switched off and back on); not yet played on a server.
   - Outland's and Northrend's included - from its new entry level to 60.
 - **Battlegrounds.** The Eye of the Storm, the Strand of the Ancients, the Isle of Conquest and Wintergrasp open at 60.
 - **Bots.** With mod-playerbots, the random bots stop at 60, go to each zone at its new levels and mount and fly when
-  the players can.
+  the players can. The CoA branch of Playerbots leaves out every zone of Outland and Northrend when its bots stop at
+  60; `patches/playerbots-zone-brackets.patch` lets a zone keep the bracket the config gives it (AFK Realm applies it).
 - **The world map** of the client shows the new zone levels, with the small addon `client/AddOns/ZoneLevels`.
 
 ## Reversible
