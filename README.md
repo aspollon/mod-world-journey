@@ -71,11 +71,14 @@ warning in the log. With the playerbots patch, the random bots are kept at 60 to
 
 ## CoA's scaling, and what the module adds to it
 
-CoA scales the open world for a character who switched it on at the Destiny Weaver: creatures below the character
-are **lifted** to it (never lowered), `DestinyWeaver.Scaling.Offset` levels below; dungeons scale both ways.
+CoA asks at character creation whether a character wants level scaling (CoA's module for it is called
+mod-destiny-weaver; its Destiny Weaver NPCs let a character change the choice later). With scaling on, creatures below
+the character are **lifted** to it (never lowered), `DestinyWeaver.Scaling.Offset` levels below; dungeons scale both
+ways.
 
-- `Journey.Scaling.Forced = 1` (default): every character plays the scaled world from its creation, and the Destiny
-  Weaver no longer offers to switch it off.
+- `Journey.Scaling.Forced = 1` (default): every character plays the scaled world. The question at character creation
+  still appears in the client, but "off" no longer counts, and the Destiny Weaver NPCs no longer offer to switch it
+  off.
 - `Journey.Window.*`: lifted creatures keep their place in their zone instead of all standing at the same level.
 
 Both need `patches/core-level-window.patch`. Without it the module still works; scaling stays each character's

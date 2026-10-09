@@ -135,10 +135,11 @@ Journey.Endgame.Northrend.ItemLevels = 95-140
 
 #
 #    Journey.Scaling.Forced
-#        Description: Every character plays the scaled world: CoA's open world scaling is on for
-#                     everyone, from the creation of a character, and the Destiny Weaver no longer
-#                     offers to switch it off. Without it each character chooses at the Destiny
-#                     Weaver, as CoA does it. Needs patches/core-level-window.patch.
+#        Description: Every character plays the scaled world: CoA's level scaling is on for everyone.
+#                     The question at character creation (level scaling on or off) still appears in
+#                     the client, but "off" no longer counts, and the Destiny Weaver NPCs no longer
+#                     offer to switch it off later. Without it each character keeps the choice it
+#                     made at creation, as CoA does it. Needs patches/core-level-window.patch.
 #        Default:     1 - Forced
 #                     0 - Each character's choice
 
