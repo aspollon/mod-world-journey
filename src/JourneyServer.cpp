@@ -40,6 +40,7 @@
 #include <map>
 #include <sstream>
 #include <unordered_map>
+#include <vector>
 
 namespace
 {
@@ -518,6 +519,25 @@ namespace
         return uint8(std::clamp<int>(min + int(std::lround(above * 0.65)), min, max));
     }
 
+#if defined(LOCAL_LEVEL_SCALING_WORLD_JOURNEY) && LOCAL_LEVEL_SCALING_WORLD_JOURNEY >= 2
+    /// CoA scales the old world and the classic dungeons, the latter inside the levels of LFGDungeons.dbc. On the
+    /// journey Outland and Northrend scale too, and every dungeon is held between its new entry level and 60.
+    void ScalingScope(std::vector<uint32>& worldMaps, std::vector<std::pair<uint32, LocalLevelScaling::LevelBand>>& dungeonBands)
+    {
+        if (!runtime.enabled)
+            return;
+        worldMaps.push_back(530);
+        worldMaps.push_back(571);
+        uint8 const top = uint8(std::clamp<uint32>(sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL), 1, 255));
+        for (journey::InstanceData const& instance : journey::Instances)
+            if (instance.kind == 0 && instance.difficulty == 0)
+            {
+                uint8 const entry = uint8(std::clamp<int>(EntryOf(instance), 1, top));
+                dungeonBands.push_back({ instance.map, LocalLevelScaling::LevelBand{ entry, top } });
+            }
+    }
+#endif
+
     void SetDungeonFinder()
     {
         dungeonLevels.clear();
@@ -720,6 +740,9 @@ public:
     {
         ReadRegulators();
         Guard();
+#if defined(LOCAL_LEVEL_SCALING_WORLD_JOURNEY) && LOCAL_LEVEL_SCALING_WORLD_JOURNEY >= 2
+        LocalLevelScaling::ScalingScopeOwner.store(&ScalingScope, std::memory_order_relaxed);
+#endif
         if (reload)
             return;     // the database is set once, before the world reads it
         RunDatabase();
@@ -752,6 +775,9 @@ public:
 #ifdef LOCAL_LEVEL_SCALING_WORLD_JOURNEY
         LocalLevelScaling::CreatureWindowOwner.store(nullptr);
         LocalLevelScaling::ScalingChoiceForced.store(false);
+#if LOCAL_LEVEL_SCALING_WORLD_JOURNEY >= 2
+        LocalLevelScaling::ScalingScopeOwner.store(nullptr);
+#endif
 #endif
     }
 };

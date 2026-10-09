@@ -36,37 +36,58 @@ index 0fbd7f83..c2a69f8b 100644
          SendGossipMenuFor(player, GOSSIP_TEXT_GREETING, creature);
      }
 diff --git a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
-index 2c29fda6..9ab46bcb 100644
+index 5ae2c84b..f96a7439 100644
 --- a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
 +++ b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
-@@ -219,9 +219,16 @@ namespace
-         Map const* map = creature->GetMap();
-         // The viewer's own rule, not the realm's: a level that is told to one client is bounded by
-         // nothing, because there is nobody else for a high view to be wrong for.
--        uint8 const level = map->IsNonRaidDungeon() && map->IsRegularDifficulty()
-+        bool const dungeon = map->IsNonRaidDungeon() && map->IsRegularDifficulty();
-+        uint8 level = dungeon
-             ? LocalLevelScaling::ScaleDungeonCreatureLevelForViewer(own, viewer->GetLevel(), offset)
-             : LocalLevelScaling::ScaleCreatureLevelForViewer(own, viewer->GetLevel(), offset);
-+        // In the open world, a window around the viewer may place the creature instead (World Journey).
-+        if (!dungeon && !map->Instanceable())
+@@ -151,6 +151,18 @@ namespace
+                 itr->second = LocalLevelScaling::MergeBands(itr->second, band);
+         }
+ 
++        if (LocalLevelScaling::ScalingScopeResolver const journey =
++                LocalLevelScaling::ScalingScopeOwner.load(std::memory_order_relaxed))
++        {
++            std::vector<uint32> worldMaps;
++            std::vector<std::pair<uint32, LocalLevelScaling::LevelBand>> dungeonBands;
++            journey(worldMaps, dungeonBands);
++            for (uint32 mapId : worldMaps)
++                scope->WorldMaps.insert(mapId);
++            for (auto const& [mapId, band] : dungeonBands)
++                scope->DungeonBands.insert_or_assign(mapId, band);
++        }
++
+         LOG_INFO("module.destiny_weaver", "creature scaling covers {} open-world map(s) and {} dungeon map(s)",
+                  scope->WorldMaps.size(), scope->DungeonBands.size());
+ 
+@@ -326,6 +338,11 @@ namespace
+             // nothing, because there is nobody else for a high view to be wrong for.
+             uint8 const offset = LocalLevelScaling::CreatureOffset.load(std::memory_order_relaxed);
+             level = LocalLevelScaling::ScaleCreatureLevelForViewer(own, viewer->GetLevel(), offset);
++            // A window around the viewer may place the creature instead (World Journey).
 +            if (LocalLevelScaling::CreatureWindowResolver const window =
 +                    LocalLevelScaling::CreatureWindowOwner.load(std::memory_order_relaxed))
 +                if (uint8 const placed = window(viewer, creature, own))
 +                    level = placed;
-         if (level == own)
-             return false;               // their version *is* the creature: nothing to virtualise
+         }
  
+         if (level == own)
 diff --git a/src/server/game/Miscellaneous/LocalLevelScaling.h b/src/server/game/Miscellaneous/LocalLevelScaling.h
-index b82e5b3b..1d994102 100644
+index 8454beee..3dc4cf17 100644
 --- a/src/server/game/Miscellaneous/LocalLevelScaling.h
 +++ b/src/server/game/Miscellaneous/LocalLevelScaling.h
-@@ -48,12 +48,23 @@ inline std::atomic<std::uint32_t> QuestXpKeepSharePercent{100};
+@@ -14,6 +14,7 @@
+ #include <cstdint>
+ #include <optional>
+ #include <utility>
++#include <vector>
+ 
+ class Creature;
+ class Item;
+@@ -39,12 +40,23 @@ inline std::atomic<bool> QuestClientScalingFlag{false};
  using QuestScalingResolver = bool (*)(Player const*);
  inline std::atomic<QuestScalingResolver> QuestScalingOwner{nullptr};
  
 +/// World Journey: scaling is the realm's, not a choice - every character plays the scaled world.
-+#define LOCAL_LEVEL_SCALING_WORLD_JOURNEY 1
++#define LOCAL_LEVEL_SCALING_WORLD_JOURNEY 2
 +inline std::atomic<bool> ScalingChoiceForced{false};
 +
 +/// World Journey: where a lifted creature stands for a viewer in the open world - its place in its zone, within a
@@ -85,3 +106,16 @@ index b82e5b3b..1d994102 100644
      return owner && owner(player);
  }
  
+@@ -276,6 +288,12 @@ inline LevelBand MergeBands(LevelBand a, LevelBand b)
+     return { std::min(a.Low, b.Low), std::max(a.High, b.High) };
+ }
+ 
++/// World Journey: the maps its journey runs through scale too, and its dungeons are held inside the bands of the
++/// journey instead of the levels in LFGDungeons.dbc. Asked whenever the scaling scope is built.
++using ScalingScopeResolver = void (*)(std::vector<std::uint32_t>& worldMaps,
++                                      std::vector<std::pair<std::uint32_t, LevelBand>>& dungeonBands);
++inline std::atomic<ScalingScopeResolver> ScalingScopeOwner{nullptr};
++
+ /// The viewer's rule inside a scaled five-player dungeon: every creature stands at the viewer's own
+ /// level, held inside the dungeon's band on both sides. The dungeon finder admits a group well below a
+ /// classic dungeon's authored level (Scarlet Monastery - Cathedral from 20 against creatures of 36-40),

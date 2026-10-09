@@ -72,20 +72,29 @@ warning in the log. With the playerbots patch, the random bots are kept at 60 to
 ## CoA's scaling, and what the module adds to it
 
 CoA asks at character creation whether a character wants level scaling (CoA's module for it is called
-mod-destiny-weaver; its Destiny Weaver NPCs let a character change the choice later). With scaling on, creatures below
-the character are **lifted** to it (never lowered), `DestinyWeaver.Scaling.Offset` levels below; dungeons scale both
-ways.
+mod-destiny-weaver; its Destiny Weaver NPCs let a character change the choice later). With scaling on, creatures of the
+open world below the character are **lifted** to it (never lowered), `DestinyWeaver.Scaling.Offset` levels below; in a
+scaled dungeon every creature stands at the character's level, held inside the dungeon's band. CoA itself scales only
+the old world and the classic dungeons, inside the levels of the client's LFGDungeons.dbc.
 
+`patches/core-level-window.patch` brings the journey into it:
+
+- Outland and Northrend scale like the old world.
+- Every dungeon on the journey - Outland's and Northrend's included - scales between its new entry level and 60, so a
+  dungeon of the old world is no longer lifted back to its original levels.
+- `Journey.Window.*`: lifted creatures keep their place in their zone instead of all standing at the same level.
 - `Journey.Scaling.Forced = 1` (default): every character plays the scaled world. The question at character creation
   still appears in the client, but "off" no longer counts, and the Destiny Weaver NPCs no longer offer to switch it
   off.
-- `Journey.Window.*`: lifted creatures keep their place in their zone instead of all standing at the same level.
 
-Both need `patches/core-level-window.patch`. Without it the module still works; scaling stays each character's
-choice, and lifted creatures stand where CoA puts them.
+Without the patch the module still works; scaling stays each character's choice, only the old world and CoA's classic
+dungeons scale, and lifted creatures stand where CoA puts them.
 
 The module itself lowers: it compresses the world database for everyone, scaling on or off. CoA's scaling then lifts
 what is left behind.
+
+`patches/core-lottery-link.patch` has nothing to do with the journey: CoA's lottery module (October 2026) misses an
+include and does not link with Visual Studio. AFK Realm leaves the patch out by itself once CoA has the fix.
 
 ## Reversible
 
@@ -122,13 +131,14 @@ The first start with the module takes about a minute longer than usual; later st
 ## Installation
 
 **With [AFK Realm](https://github.com/aspollon/AFK-Realm):** add the module. AFK Realm reads `afk-realm.json`: it
-applies the two patches, and sets `MaxPlayerLevel`, `DungeonFinder.MaxExpansion`, `Wintergrasp.PlayerMinLvl`,
+applies the patches, and sets `MaxPlayerLevel`, `DungeonFinder.MaxExpansion`, `Wintergrasp.PlayerMinLvl`,
 `AiPlayerbot.RandomBotMaxLevel` and `DestinyWeaver.Scaling.Offset` in the other config files.
 
 **By hand:**
 
 1. Clone the module into `modules/`.
-2. Apply the patches: `git apply modules/mod-world-journey/patches/core-level-window.patch` in the core, and
+2. Apply the patches: `git apply modules/mod-world-journey/patches/core-level-window.patch` (and, if the server does not
+   link, `core-lottery-link.patch`) in the core, and
    `git apply ../../mod-world-journey/patches/playerbots-world-journey.patch` in `modules/mod-playerbots`.
 3. Rebuild, and copy `conf/mod_world_journey.conf.dist` next to the other module configs as `mod_world_journey.conf`.
 4. Set the values listed under `settings` in `afk-realm.json`.

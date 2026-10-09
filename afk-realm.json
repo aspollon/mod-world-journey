@@ -8,10 +8,16 @@
       "why": "The random bots take their zone levels, their highest level and their mount levels from World Journey, and keep Outland and Northrend when they stop at 60."
     },
     {
-      "name": "A window for lifted creatures",
+      "name": "The journey in CoA's level scaling",
       "target": "core",
       "file": "patches/core-level-window.patch",
-      "why": "Creatures lifted to a character keep their place in their zone - from two levels below to two above - instead of all standing at the same level."
+      "why": "CoA scales only the old world and the classic dungeons, inside their original levels. With this change Outland and Northrend scale too, every dungeon is held between its new entry level and 60, lifted creatures keep their place in their zone - from two levels below to two above - and Journey.Scaling.Forced can make scaling the realm's."
+    },
+    {
+      "name": "CoA's lottery links on Windows",
+      "target": "core",
+      "file": "patches/core-lottery-link.patch",
+      "why": "CoA's lottery (mod-coa-lottery, October 2026) misses an include, and the server does not link with Visual Studio. Left out by itself as soon as CoA has the fix."
     }
   ],
   "settings": [
