@@ -462,14 +462,39 @@ namespace
         uint32 const spells = rescale.ApplySpells();
         uint32 const enchants = rescale.ApplyEnchants();
 
-        // An enchantment that asks for a level above the journey asks for 60.
+        // The level an enchantment of Outland or Northrend asks for follows the journey like the world it comes from:
+        // a gem of Northrend that asked for 80 asks for the end of Northrend's road, one of Outland that asked for 70
+        // for the end of Outland's. Gems and the enchantments of the professions know their game; the rest is judged
+        // by its level. Below 58 the old world's enchantments - poisons, a shaman's weapons - stay as their classes
+        // learn them. What an item asks for itself (an epic gem of a raid: 60) stays the item's.
+        std::unordered_map<uint32, uint8> enchantEras;
+        for (GemPropertiesEntry const* gem : sGemPropertiesStore)
+        {
+            auto era = outcome.gemEras.find(gem->ID);
+            if (era != outcome.gemEras.end())
+                enchantEras[gem->spellitemenchantement] = era->second;
+        }
+        for (auto const& [spell, era] : outcome.craftEras)
+            if (SpellInfo const* info = sSpellMgr->GetSpellInfo(spell))
+                for (SpellEffectInfo const& effect : info->GetEffects())
+                    if (IsEnchant(effect) && effect.MiscValue > 0)
+                        enchantEras[uint32(effect.MiscValue)] = era;
+        int const top = int(std::min<uint32>(sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL), 60));
         uint32 lowered = 0;
         for (SpellItemEnchantmentEntry const* entry : sSpellItemEnchantmentStore)
-            if (entry->requiredLevel > 60)
+        {
+            int const required = int(entry->requiredLevel);
+            if (required < 58)
+                continue;
+            auto known = enchantEras.find(entry->ID);
+            bool const northrend = known != enchantEras.end() ? known->second == journey::ITEM_WOTLK : required > 70;
+            int const now = std::clamp(journey::Compress(required, northrend ? journey::ERA_NORTHREND : journey::ERA_OUTLAND), 1, top);
+            if (now < required)
             {
-                const_cast<SpellItemEnchantmentEntry*>(entry)->requiredLevel = 60;
+                const_cast<SpellItemEnchantmentEntry*>(entry)->requiredLevel = uint32(now);
                 ++lowered;
             }
+        }
 
         // The spells scaled in spell_dbc go to the client with CoA's own spell patches: their tooltips are right.
         uint32 registered = 0;
@@ -482,7 +507,7 @@ namespace
 #endif
         Say(std::to_string(outcome.tooltipSpells.size()) + " spell(s) of items scaled in spell_dbc (" + std::to_string(registered) +
             " sent to the client), " + std::to_string(spells) + " more in memory; " + std::to_string(enchants) +
-            " enchantment(s) and gem(s) scaled, " + std::to_string(lowered) + " open at 60");
+            " enchantment(s) and gem(s) scaled, " + std::to_string(lowered) + " ask for a level of the journey");
     }
 
     // ------------------------------------------------------------------------------------------ instances, Dungeon Finder, battlegrounds

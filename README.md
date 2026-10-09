@@ -51,7 +51,9 @@ originals.
 - **Potions, food, elixirs, flasks, trinkets and procs.** The spells of an item are scaled with it; a potion of
   Northrend heals what a potion of its new level should.
 - **Gems and enchantments** of Outland and Northrend - from gems, socket bonuses, enchanting scrolls and the other
-  professions - by what the top rewards of their game keep of their stats.
+  professions - by what the top rewards of their game keep of their stats. The level an enchantment asks for moves with
+  its part of the world (a gem of Northrend that asked for 80 asks for 60, one of Outland that asked for 70 for 47 with
+  the default ranges); what the gem or scroll itself asks for is the item's, so an epic gem of a raid stays at 60.
 - **Riding and the professions.** Riding at 13 and 26, flying at 33 and 47, cold weather flying at 55, the grand
   master of a profession at 40. The class trainers are not touched.
 - **Instances and the Dungeon Finder.** The entry levels of the dungeons, and the Dungeon Finder offers every dungeon -
@@ -110,8 +112,11 @@ The first start with the module takes about a minute longer than usual; later st
 ## Known limits
 
 - **Tooltips.** The spells of items are written into `spell_dbc` and reach the client with CoA's spell patches, so
-  their tooltips are right. Gems and enchantments are corrected by the addon `ZoneLevels`; without it they show the
-  old numbers (what counts is what the server applies). Items show their new values once the client's cache is
+  their tooltips are right. Gems and enchantments are changed in the server's memory only - the server socketing a gem,
+  applying an enchantment and deciding whether its stats count - and the client's `SpellItemEnchantment.dbc` keeps the
+  original numbers and levels. The addon `ZoneLevels` corrects the numbers in the tooltip; without it they show the old
+  ones. How the client draws an enchantment whose original level a character has not reached yet is not checked in
+  the game yet; what counts is what the server applies, and the character sheet shows that. Items show their new values once the client's cache is
   cleared.
 - **The Dungeon Finder** of the client reads its levels from its own LFGDungeons.dbc, which still holds the original
   ones - and it hides every dungeon outside them, so a character of 35 would not even see Outland's dungeons. The add-on
