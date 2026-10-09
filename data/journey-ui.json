@@ -1,0 +1,897 @@
+{
+ "about": "For the setup page of AFK Realm. Built by tools/make_levels.py from data/ - do not edit by hand.",
+ "zones": [
+  {
+   "zone": 14,
+   "name": "Durotar",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 215,
+   "name": "Mulgore",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 17,
+   "name": "The Barrens",
+   "part": 0,
+   "originalEntry": 10
+  },
+  {
+   "zone": 36,
+   "name": "Alterac Mountains",
+   "part": 0,
+   "originalEntry": 30
+  },
+  {
+   "zone": 45,
+   "name": "Arathi Highlands",
+   "part": 0,
+   "originalEntry": 30
+  },
+  {
+   "zone": 3,
+   "name": "Badlands",
+   "part": 0,
+   "originalEntry": 35
+  },
+  {
+   "zone": 4,
+   "name": "Blasted Lands",
+   "part": 0,
+   "originalEntry": 45
+  },
+  {
+   "zone": 85,
+   "name": "Tirisfal Glades",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 130,
+   "name": "Silverpine Forest",
+   "part": 0,
+   "originalEntry": 10
+  },
+  {
+   "zone": 28,
+   "name": "Western Plaguelands",
+   "part": 0,
+   "originalEntry": 51
+  },
+  {
+   "zone": 139,
+   "name": "Eastern Plaguelands",
+   "part": 0,
+   "originalEntry": 53
+  },
+  {
+   "zone": 267,
+   "name": "Hillsbrad Foothills",
+   "part": 0,
+   "originalEntry": 20
+  },
+  {
+   "zone": 47,
+   "name": "The Hinterlands",
+   "part": 0,
+   "originalEntry": 45
+  },
+  {
+   "zone": 1,
+   "name": "Dun Morogh",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 51,
+   "name": "Searing Gorge",
+   "part": 0,
+   "originalEntry": 43
+  },
+  {
+   "zone": 46,
+   "name": "Burning Steppes",
+   "part": 0,
+   "originalEntry": 50
+  },
+  {
+   "zone": 12,
+   "name": "Elwynn Forest",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 41,
+   "name": "Deadwind Pass",
+   "part": 0,
+   "originalEntry": 55
+  },
+  {
+   "zone": 10,
+   "name": "Duskwood",
+   "part": 0,
+   "originalEntry": 20
+  },
+  {
+   "zone": 38,
+   "name": "Loch Modan",
+   "part": 0,
+   "originalEntry": 10
+  },
+  {
+   "zone": 44,
+   "name": "Redridge Mountains",
+   "part": 0,
+   "originalEntry": 15
+  },
+  {
+   "zone": 33,
+   "name": "Stranglethorn Vale",
+   "part": 0,
+   "originalEntry": 30
+  },
+  {
+   "zone": 8,
+   "name": "Swamp of Sorrows",
+   "part": 0,
+   "originalEntry": 35
+  },
+  {
+   "zone": 40,
+   "name": "Westfall",
+   "part": 0,
+   "originalEntry": 10
+  },
+  {
+   "zone": 11,
+   "name": "Wetlands",
+   "part": 0,
+   "originalEntry": 20
+  },
+  {
+   "zone": 141,
+   "name": "Teldrassil",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 148,
+   "name": "Darkshore",
+   "part": 0,
+   "originalEntry": 10
+  },
+  {
+   "zone": 331,
+   "name": "Ashenvale",
+   "part": 0,
+   "originalEntry": 18
+  },
+  {
+   "zone": 400,
+   "name": "Thousand Needles",
+   "part": 0,
+   "originalEntry": 25
+  },
+  {
+   "zone": 406,
+   "name": "Stonetalon Mountains",
+   "part": 0,
+   "originalEntry": 15
+  },
+  {
+   "zone": 405,
+   "name": "Desolace",
+   "part": 0,
+   "originalEntry": 30
+  },
+  {
+   "zone": 357,
+   "name": "Feralas",
+   "part": 0,
+   "originalEntry": 40
+  },
+  {
+   "zone": 15,
+   "name": "Dustwallow Marsh",
+   "part": 0,
+   "originalEntry": 35
+  },
+  {
+   "zone": 440,
+   "name": "Tanaris",
+   "part": 0,
+   "originalEntry": 40
+  },
+  {
+   "zone": 16,
+   "name": "Azshara",
+   "part": 0,
+   "originalEntry": 45
+  },
+  {
+   "zone": 361,
+   "name": "Felwood",
+   "part": 0,
+   "originalEntry": 48
+  },
+  {
+   "zone": 490,
+   "name": "Un'Goro Crater",
+   "part": 0,
+   "originalEntry": 48
+  },
+  {
+   "zone": 1377,
+   "name": "Silithus",
+   "part": 0,
+   "originalEntry": 55
+  },
+  {
+   "zone": 618,
+   "name": "Winterspring",
+   "part": 0,
+   "originalEntry": 53
+  },
+  {
+   "zone": 3430,
+   "name": "Eversong Woods",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 3433,
+   "name": "Ghostlands",
+   "part": 0,
+   "originalEntry": 10
+  },
+  {
+   "zone": 3524,
+   "name": "Azuremyst Isle",
+   "part": 0,
+   "originalEntry": 1
+  },
+  {
+   "zone": 3525,
+   "name": "Bloodmyst Isle",
+   "part": 0,
+   "originalEntry": 10
+  },
+  {
+   "zone": 3483,
+   "name": "Hellfire Peninsula",
+   "part": 1,
+   "originalEntry": 58
+  },
+  {
+   "zone": 3521,
+   "name": "Zangarmarsh",
+   "part": 1,
+   "originalEntry": 60
+  },
+  {
+   "zone": 3519,
+   "name": "Terokkar Forest",
+   "part": 1,
+   "originalEntry": 62
+  },
+  {
+   "zone": 3518,
+   "name": "Nagrand",
+   "part": 1,
+   "originalEntry": 64
+  },
+  {
+   "zone": 3522,
+   "name": "Blade's Edge Mountains",
+   "part": 1,
+   "originalEntry": 65
+  },
+  {
+   "zone": 3523,
+   "name": "Netherstorm",
+   "part": 1,
+   "originalEntry": 67
+  },
+  {
+   "zone": 3520,
+   "name": "Shadowmoon Valley",
+   "part": 1,
+   "originalEntry": 67
+  },
+  {
+   "zone": 4080,
+   "name": "Isle of Quel'Danas",
+   "part": 1,
+   "originalEntry": 70
+  },
+  {
+   "zone": 3537,
+   "name": "Borean Tundra",
+   "part": 2,
+   "originalEntry": 68
+  },
+  {
+   "zone": 495,
+   "name": "Howling Fjord",
+   "part": 2,
+   "originalEntry": 68
+  },
+  {
+   "zone": 65,
+   "name": "Dragonblight",
+   "part": 2,
+   "originalEntry": 71
+  },
+  {
+   "zone": 394,
+   "name": "Grizzly Hills",
+   "part": 2,
+   "originalEntry": 73
+  },
+  {
+   "zone": 66,
+   "name": "Zul'Drak",
+   "part": 2,
+   "originalEntry": 74
+  },
+  {
+   "zone": 3711,
+   "name": "Sholazar Basin",
+   "part": 2,
+   "originalEntry": 75
+  },
+  {
+   "zone": 210,
+   "name": "Icecrown",
+   "part": 2,
+   "originalEntry": 77
+  },
+  {
+   "zone": 67,
+   "name": "The Storm Peaks",
+   "part": 2,
+   "originalEntry": 77
+  },
+  {
+   "zone": 2817,
+   "name": "Crystalsong Forest",
+   "part": 2,
+   "originalEntry": 77
+  },
+  {
+   "zone": 4197,
+   "name": "Wintergrasp",
+   "part": 2,
+   "originalEntry": 77
+  },
+  {
+   "zone": 4742,
+   "name": "Hrothgar's Landing",
+   "part": 2,
+   "originalEntry": 77
+  }
+ ],
+ "instances": [
+  {
+   "map": 33,
+   "name": "Shadowfang Keep",
+   "kind": 0,
+   "originalEntry": 14,
+   "contentLevel": 38
+  },
+  {
+   "map": 34,
+   "name": "Stormwind Stockades",
+   "kind": 0,
+   "originalEntry": 15,
+   "contentLevel": 24
+  },
+  {
+   "map": 36,
+   "name": "Deadmines",
+   "kind": 0,
+   "originalEntry": 10,
+   "contentLevel": 19
+  },
+  {
+   "map": 43,
+   "name": "Wailing Caverns",
+   "kind": 0,
+   "originalEntry": 10,
+   "contentLevel": 19
+  },
+  {
+   "map": 47,
+   "name": "Razorfen Kraul",
+   "kind": 0,
+   "originalEntry": 17,
+   "contentLevel": 26
+  },
+  {
+   "map": 48,
+   "name": "Blackfathom Deeps",
+   "kind": 0,
+   "originalEntry": 19,
+   "contentLevel": 23
+  },
+  {
+   "map": 70,
+   "name": "Uldaman",
+   "kind": 0,
+   "originalEntry": 30,
+   "contentLevel": 38
+  },
+  {
+   "map": 90,
+   "name": "Gnomeregan",
+   "kind": 0,
+   "originalEntry": 15,
+   "contentLevel": 27
+  },
+  {
+   "map": 109,
+   "name": "Sunken Temple",
+   "kind": 0,
+   "originalEntry": 35,
+   "contentLevel": 48
+  },
+  {
+   "map": 129,
+   "name": "Razorfen Downs",
+   "kind": 0,
+   "originalEntry": 25,
+   "contentLevel": 36
+  },
+  {
+   "map": 189,
+   "name": "Scarlet Monastery",
+   "kind": 0,
+   "originalEntry": 20,
+   "contentLevel": 35
+  },
+  {
+   "map": 209,
+   "name": "Zul'Farrak",
+   "kind": 0,
+   "originalEntry": 35,
+   "contentLevel": 44
+  },
+  {
+   "map": 229,
+   "name": "Blackrock Spire",
+   "kind": 0,
+   "originalEntry": 45,
+   "contentLevel": 58
+  },
+  {
+   "map": 230,
+   "name": "Blackrock Depths",
+   "kind": 0,
+   "originalEntry": 40,
+   "contentLevel": 52
+  },
+  {
+   "map": 249,
+   "name": "Onyxia's Lair",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 80
+  },
+  {
+   "map": 269,
+   "name": "The Black Morass",
+   "kind": 0,
+   "originalEntry": 66,
+   "contentLevel": 68
+  },
+  {
+   "map": 289,
+   "name": "Scholomance",
+   "kind": 0,
+   "originalEntry": 45,
+   "contentLevel": 59
+  },
+  {
+   "map": 309,
+   "name": "Zul'Gurub",
+   "kind": 2,
+   "originalEntry": 50,
+   "contentLevel": 60
+  },
+  {
+   "map": 329,
+   "name": "Stratholme",
+   "kind": 0,
+   "originalEntry": 45,
+   "contentLevel": 58
+  },
+  {
+   "map": 349,
+   "name": "Maraudon",
+   "kind": 0,
+   "originalEntry": 30,
+   "contentLevel": 45
+  },
+  {
+   "map": 389,
+   "name": "Ragefire Chasm",
+   "kind": 0,
+   "originalEntry": 8,
+   "contentLevel": 15
+  },
+  {
+   "map": 409,
+   "name": "Molten Core",
+   "kind": 2,
+   "originalEntry": 50,
+   "contentLevel": 62
+  },
+  {
+   "map": 429,
+   "name": "Dire Maul",
+   "kind": 0,
+   "originalEntry": 45,
+   "contentLevel": 57
+  },
+  {
+   "map": 469,
+   "name": "Blackwing Lair",
+   "kind": 2,
+   "originalEntry": 60,
+   "contentLevel": 60
+  },
+  {
+   "map": 509,
+   "name": "Ahn'Qiraj Ruins",
+   "kind": 2,
+   "originalEntry": 50,
+   "contentLevel": 60
+  },
+  {
+   "map": 531,
+   "name": "Ahn'Qiraj Temple",
+   "kind": 2,
+   "originalEntry": 50,
+   "contentLevel": 60
+  },
+  {
+   "map": 532,
+   "name": "Karazhan",
+   "kind": 2,
+   "originalEntry": 68,
+   "contentLevel": 70
+  },
+  {
+   "map": 533,
+   "name": "Naxxramas",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 81
+  },
+  {
+   "map": 534,
+   "name": "Battle for Mount Hyjal",
+   "kind": 2,
+   "originalEntry": 70,
+   "contentLevel": 70
+  },
+  {
+   "map": 540,
+   "name": "The Shattered Halls",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 69
+  },
+  {
+   "map": 542,
+   "name": "The Blood Furnace",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 61
+  },
+  {
+   "map": 543,
+   "name": "Hellfire Ramparts",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 61
+  },
+  {
+   "map": 544,
+   "name": "Magtheridon's Lair",
+   "kind": 2,
+   "originalEntry": 65,
+   "contentLevel": 65
+  },
+  {
+   "map": 545,
+   "name": "The Steamvault",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 70
+  },
+  {
+   "map": 546,
+   "name": "The Underbog",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 63
+  },
+  {
+   "map": 547,
+   "name": "The Slave Pens",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 63
+  },
+  {
+   "map": 548,
+   "name": "Serpentshrine Cavern",
+   "kind": 2,
+   "originalEntry": 68,
+   "contentLevel": 70
+  },
+  {
+   "map": 550,
+   "name": "Tempest Keep",
+   "kind": 2,
+   "originalEntry": 70,
+   "contentLevel": 70
+  },
+  {
+   "map": 552,
+   "name": "The Arcatraz",
+   "kind": 0,
+   "originalEntry": 68,
+   "contentLevel": 70
+  },
+  {
+   "map": 553,
+   "name": "The Botanica",
+   "kind": 0,
+   "originalEntry": 67,
+   "contentLevel": 70
+  },
+  {
+   "map": 554,
+   "name": "The Mechanar",
+   "kind": 0,
+   "originalEntry": 67,
+   "contentLevel": 70
+  },
+  {
+   "map": 555,
+   "name": "Shadow Labyrinth",
+   "kind": 0,
+   "originalEntry": 65,
+   "contentLevel": 70
+  },
+  {
+   "map": 556,
+   "name": "Sethekk Halls",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 68
+  },
+  {
+   "map": 557,
+   "name": "Mana Tombs",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 65
+  },
+  {
+   "map": 558,
+   "name": "Auchenai Crypts",
+   "kind": 0,
+   "originalEntry": 55,
+   "contentLevel": 66
+  },
+  {
+   "map": 560,
+   "name": "Old Hillsbrad Foothills",
+   "kind": 0,
+   "originalEntry": 64,
+   "contentLevel": 64
+  },
+  {
+   "map": 564,
+   "name": "Black Temple",
+   "kind": 2,
+   "originalEntry": 70,
+   "contentLevel": 70
+  },
+  {
+   "map": 565,
+   "name": "Gruul's Lair",
+   "kind": 2,
+   "originalEntry": 70,
+   "contentLevel": 72
+  },
+  {
+   "map": 568,
+   "name": "Zul'Aman",
+   "kind": 2,
+   "originalEntry": 70,
+   "contentLevel": 70
+  },
+  {
+   "map": 574,
+   "name": "Utgarde Keep",
+   "kind": 0,
+   "originalEntry": 65,
+   "contentLevel": 70
+  },
+  {
+   "map": 575,
+   "name": "Utgarde Pinnacle",
+   "kind": 0,
+   "originalEntry": 75,
+   "contentLevel": 79
+  },
+  {
+   "map": 576,
+   "name": "The Nexus",
+   "kind": 0,
+   "originalEntry": 66,
+   "contentLevel": 71
+  },
+  {
+   "map": 578,
+   "name": "The Oculus",
+   "kind": 0,
+   "originalEntry": 75,
+   "contentLevel": 78
+  },
+  {
+   "map": 580,
+   "name": "Sunwell Plateau",
+   "kind": 2,
+   "originalEntry": 70,
+   "contentLevel": 71
+  },
+  {
+   "map": 585,
+   "name": "Magisters' Terrace",
+   "kind": 0,
+   "originalEntry": 65,
+   "contentLevel": 70
+  },
+  {
+   "map": 595,
+   "name": "Culling of Stratholme",
+   "kind": 0,
+   "originalEntry": 75,
+   "contentLevel": 75
+  },
+  {
+   "map": 599,
+   "name": "Halls of Stone",
+   "kind": 0,
+   "originalEntry": 72,
+   "contentLevel": 77
+  },
+  {
+   "map": 600,
+   "name": "Drak'Tharon Keep",
+   "kind": 0,
+   "originalEntry": 69,
+   "contentLevel": 74
+  },
+  {
+   "map": 601,
+   "name": "Azjol-Nerub",
+   "kind": 0,
+   "originalEntry": 67,
+   "contentLevel": 69
+  },
+  {
+   "map": 602,
+   "name": "Halls of Lightning",
+   "kind": 0,
+   "originalEntry": 75,
+   "contentLevel": 80
+  },
+  {
+   "map": 603,
+   "name": "Ulduar",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 80
+  },
+  {
+   "map": 604,
+   "name": "Gundrak",
+   "kind": 0,
+   "originalEntry": 71,
+   "contentLevel": 77
+  },
+  {
+   "map": 608,
+   "name": "Violet Hold",
+   "kind": 0,
+   "originalEntry": 70,
+   "contentLevel": 76
+  },
+  {
+   "map": 615,
+   "name": "The Obsidian Sanctum",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 80
+  },
+  {
+   "map": 616,
+   "name": "The Eye of Eternity",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 80
+  },
+  {
+   "map": 619,
+   "name": "Ahn'Kahet",
+   "kind": 0,
+   "originalEntry": 68,
+   "contentLevel": 73
+  },
+  {
+   "map": 624,
+   "name": "Vault of Archavon",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 80
+  },
+  {
+   "map": 631,
+   "name": "Icecrown Citadel",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 80
+  },
+  {
+   "map": 632,
+   "name": "Forge of Souls",
+   "kind": 0,
+   "originalEntry": 75,
+   "contentLevel": 80
+  },
+  {
+   "map": 649,
+   "name": "Trial of the Crusader",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 80
+  },
+  {
+   "map": 650,
+   "name": "Trial of the Champion",
+   "kind": 0,
+   "originalEntry": 75,
+   "contentLevel": 76
+  },
+  {
+   "map": 658,
+   "name": "Pit of Saron",
+   "kind": 0,
+   "originalEntry": 78,
+   "contentLevel": 80
+  },
+  {
+   "map": 668,
+   "name": "Halls of Reflection",
+   "kind": 0,
+   "originalEntry": 78,
+   "contentLevel": 78
+  },
+  {
+   "map": 724,
+   "name": "The Ruby Sanctum",
+   "kind": 2,
+   "originalEntry": 80,
+   "contentLevel": 81
+  }
+ ]
+}

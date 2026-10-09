@@ -6,6 +6,8 @@ start, from its regulators:
   the instances (entry levels and creature levels of the CoA world database) and the default zone brackets of the
   random bots, as they came.
 - afk-realm.json: what AFK Realm sets in other config files and installs in the client.
+- data/journey-ui.json: the zones and instances with their names and original levels, for the setup page of AFK
+  Realm (which computes the journey from them with the same rules as the module).
 
 Nothing here depends on the regulators: change them in mod_world_journey.conf, not here."""
 import json, os
@@ -63,6 +65,36 @@ with open(os.path.join(root, 'src', 'JourneyData.h'), 'w', newline='\n') as f:
     for b in bots:
         f.write(f'        {{ {b[0]}, {b[1]}, {b[2]}, {b[3]} }},     // {b[4]}\n')
     f.write('    };\n}\n')
+
+NAMES = {
+    'Barrens': 'The Barrens', 'Alterac': 'Alterac Mountains', 'Arathi': 'Arathi Highlands', 'Tirisfal': 'Tirisfal Glades',
+    'Silverpine': 'Silverpine Forest', 'Hilsbrad': 'Hillsbrad Foothills', 'Hinterlands': 'The Hinterlands', 'Elwynn': 'Elwynn Forest',
+    'Redridge': 'Redridge Mountains', 'Stranglethorn': 'Stranglethorn Vale', 'Dustwallow': 'Dustwallow Marsh', 'Aszhara': 'Azshara',
+    'UngoroCrater': "Un'Goro Crater", 'Hellfire': 'Hellfire Peninsula', 'BladesEdgeMountains': "Blade's Edge Mountains",
+    'Sunwell': "Isle of Quel'Danas", 'ZulDrak': "Zul'Drak", 'IcecrownGlacier': 'Icecrown', 'TheStormPeaks': 'The Storm Peaks',
+    'LakeWintergrasp': 'Wintergrasp', 'HrothgarsLanding': "Hrothgar's Landing", 'SwampOfSorrows': 'Swamp of Sorrows',
+}
+import re as _re
+def nice(key):
+    return NAMES.get(key) or _re.sub(r'(?<=[a-z])(?=[A-Z])', ' ', key)
+def clean(name):
+    name = _re.sub(r'\s*-\s*(\d+/)?\d+man.*$', '', name)
+    name = _re.sub(r'\s*-\s*(Normal|Heroic|All wings|Both.*)$', '', name)
+    name = _re.sub(r'\s*\((DM|WC|SM|ZF|RF|BRD|ZG|BWL|AQ20|AQ40|LBRS)\)', '', name)
+    name = name.replace('Caverns Of Time: ', '').replace('Ulduar,', '').replace('Battle Of Mount Hyjal,Alliance Base', 'Battle for Mount Hyjal')
+    name = name.replace('Hellfire Citadel: ', '').replace('Coilfang Reservoir: ', '').replace(' (North entrance)', '').replace(' (of Atal\'Hakkar)', '')
+    name = {'Black Morass/Opening the Dark Portal': 'The Black Morass', 'Old Hillsbrad Foothills/Escape from Durnholde': 'Old Hillsbrad Foothills',
+            'The Eye of Eternity (Malygos)': 'The Eye of Eternity', 'The Eye': 'Tempest Keep'}.get(name.strip(), name.strip())
+    return name
+ui = {
+    'about': 'For the setup page of AFK Realm. Built by tools/make_levels.py from data/ - do not edit by hand.',
+    'zones': [{'zone': z[0], 'name': nice(z[4]), 'part': z[2], 'originalEntry': z[3]} for z in zones],
+    'instances': [{'map': i[0], 'name': clean(i[5]), 'kind': i[2], 'originalEntry': i[3], 'contentLevel': i[4]}
+                  for i in instances if i[1] == 0],
+}
+with open(os.path.join(data, 'journey-ui.json'), 'w', newline='\n') as f:
+    json.dump(ui, f, indent=1, ensure_ascii=False)
+    f.write('\n')
 
 manifest = {
     'about': 'Read by AFK Realm (https://github.com/aspollon/AFK-Realm) when it builds the server. Without AFK Realm, '
