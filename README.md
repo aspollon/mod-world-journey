@@ -61,7 +61,7 @@ originals.
 - **Battlegrounds.** The Eye of the Storm, the Strand of the Ancients, the Isle of Conquest and Wintergrasp open at 60.
 - **Bots.** With mod-playerbots, the random bots stop at 60, hunt in each zone at its new levels - Outland and
   Northrend included - and mount and fly when the players can.
-- **The client.** The world map shows the new zone levels, the Dungeon Finder the dungeons at their new levels, and
+- **The client.** The world map shows the new zone levels (and those of Outland and Northrend as a whole when zoomed out), the Dungeon Finder the dungeons at their new levels, and
   the tooltips the real values of an item's spells, gems and enchantments.
 
 ## What the module checks

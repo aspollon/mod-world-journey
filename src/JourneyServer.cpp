@@ -743,6 +743,23 @@ namespace
                 }
                 chunk += part;
             }
+            // The world map also names the levels of a whole continent when zoomed out (Northrend: 70-80 in the
+            // client's own table). Outland and Northrend get the lowest entry of their zones up to 60.
+            static char const* const Continents[] = { nullptr, "Expansion01", "Northrend" };
+            for (uint8 part = 1; part <= 2; ++part)
+            {
+                int lowest = 60;
+                for (journey::ZoneData const& zone : journey::Zones)
+                    if (zone.part == part)
+                        lowest = std::min(lowest, journey::ZoneEntry(zone.zone, zone.part, zone.originalEntry));
+                std::string const entry = std::string(Continents[part]) + "=" + std::to_string(lowest) + "-60;";
+                if (chunk.size() + entry.size() > 230)
+                {
+                    SendAddon(player, "Z" + chunk);
+                    chunk.clear();
+                }
+                chunk += entry;
+            }
             if (!chunk.empty())
                 SendAddon(player, "Z" + chunk);
         }
