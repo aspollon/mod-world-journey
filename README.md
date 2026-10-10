@@ -96,10 +96,10 @@ The module itself lowers: it compresses the world database for everyone, scaling
 what is left behind.
 
 CoA also has creature multipliers of its own (`CoA.CreatureScaling.*` in coa.conf, since October 2026). They multiply on
-top of the journey's difficulty: with them on, creatures of the open world have 2.5 times their health and hit players
-and pets twice as hard, dungeon creatures 2.5 times their health (some maps up to 5) and half again the damage. AFK
-Realm switches them off with the module (`CoA.CreatureScaling.Enable = 0`); set it to 1 to play that harder world. The
-log says at every start when both are on.
+top of the journey's difficulty, by health and damage, for the open world, dungeons and raids. Their values are CoA's
+and may change with its updates - coa.conf has the current ones; when they came, creatures of the open world had 2.5
+times their health and hit twice as hard. AFK Realm switches them off with the module (`CoA.CreatureScaling.Enable =
+0`); set it to 1 to play that harder world. The log says at every start when both are on, with the values in use.
 
 `patches/core-lottery-link.patch` has nothing to do with the journey: CoA's lottery module (October 2026) misses an
 include and does not link with Visual Studio. AFK Realm leaves the patch out by itself once CoA has the fix.
