@@ -1,5 +1,7 @@
 # mod-world-journey
 
+**English** · [Deutsch](README.de.md) · [Français](README.fr.md) · [Español](README.es.md) · [Português (Brasil)](README.pt-BR.md) · [Русский](README.ru.md) · [简体中文](README.zh-Hans.md)
+
 An AzerothCore module for class systems made for level 60 only - above all the 21 classes of
 **Conquest of Azeroth** (CoA): the whole world - the old world, Outland and Northrend - as one journey from 1 to 60.
 
@@ -168,3 +170,7 @@ Its tables and config options do not carry the module's name. To rename it, rena
 ## License
 
 GNU AGPL v3, like AzerothCore.
+
+## Languages
+
+`lang/<code>.json` carries the texts AFK Realm shows of this module (its option descriptions, the names and reasons of `afk-realm.json`, the zones and dungeons) in German, French, Spanish, Portuguese (Brazil), Russian and Simplified Chinese. AFK Realm's `tools/lang.py --module <folder> check` lists what a change left untranslated.
