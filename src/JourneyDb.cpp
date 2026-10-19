@@ -690,6 +690,41 @@ namespace journey
             Report(db, settings, tally, "battlegrounds");
         }
 
+        /// Manastorm (CoA's endless dungeon) hands out a cache by the character's level on its normal track, one per band of the
+        /// old levels (11-24, 25-30 ... 51-59). Its gear is the old world's, which the journey has moved to its own levels, so
+        /// the bands move the same way; the last band below 60 reaches up to 59, so a character in Outland's or Northrend's
+        /// levels still gets the best cache there is. The band of 60 stays (at 60 Manastorm runs its endgame track).
+        void ManastormCaches(Db const& db, Settings const& settings)
+        {
+            bool present = false;
+            db.query("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = 'manastorm_cache_bracket'",
+                [&](Row const& row) { present = Int(row[0]) > 0; });
+            if (!present)
+                return;
+
+            Ledger ledger;
+            ledger.source = "manastorm_cache_bracket";
+            ledger.backup = settings.prefix + "_manastorm_cache";
+            ledger.comment = "The original level bands of the Manastorm caches, and what the journey made of them";
+            ledger.keys = { "bracket_id" };
+            ledger.columns = { { "min_value" }, { "max_value" } };
+            ledger.where = "s.`track` = 1 AND s.`selector_kind` = 1 AND s.`max_value` < 60";
+
+            Tally const tally = Keep(db, ledger, [&](Entry const& entry)
+            {
+                std::vector<double> next = entry.orig;
+                if (!settings.enabled || !settings.items)
+                    return next;
+                int const low = int(entry.orig[0]), high = int(entry.orig[1]);
+                int const from = Classic(low);
+                int const to = high >= 59 ? 59 : std::max(from, Classic(high + 1) - 1);
+                next[0] = from;
+                next[1] = to;
+                return next;
+            });
+            Report(db, settings, tally, "Manastorm cache bands");
+        }
+
         /// The enchantments the professions teach beyond the old world: which game they belong to, by the skill.
         void Crafts(Db const& db, Outcome& outcome)
         {
@@ -1015,6 +1050,7 @@ namespace journey
         Quests(db, settings, maps, zoneShift, outcome);
         Trainers(db, settings);
         Battlegrounds(db, settings);
+        ManastormCaches(db, settings);
         if (settings.enabled && settings.enchantments)
             Crafts(db, outcome);
         Spells(db, settings, spellDbc, outcome);

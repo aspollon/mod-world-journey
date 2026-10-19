@@ -1,0 +1,86 @@
+diff --git a/src/server/game/DungeonFinding/LFGMgr.h b/src/server/game/DungeonFinding/LFGMgr.h
+index 78a2360..eca4f3a 100644
+--- a/src/server/game/DungeonFinding/LFGMgr.h
++++ b/src/server/game/DungeonFinding/LFGMgr.h
+@@ -18,6 +18,7 @@
+ #ifndef _LFGMGR_H
+ #define _LFGMGR_H
+ 
++#include <mutex>
+ #include <utility>
+ 
+ #include "ByteBuffer.h"
+@@ -29,6 +30,9 @@
+ #include "LFGQueue.h"
+ #include "Map.h"
+ 
++// World Journey's solo Dungeon Finder (SetSoloQueue / IsSoloQueue) is there.
++#define LFG_SOLO_QUEUE 1
++
+ class Group;
+ class Player;
+ class Quest;
+@@ -588,6 +592,21 @@ namespace lfg
+         void ToggleTesting();
+         /// For 1 player queue testing
+         [[nodiscard]] bool IsTesting() const { return m_Testing; }
++        /// World Journey: a player who chose to go into a dungeon alone is never put together with others, and the
++        /// Dungeon Finder starts his dungeon as soon as it finds one for him alone.
++        void SetSoloQueue(ObjectGuid guid, bool solo)
++        {
++            std::lock_guard<std::mutex> lock(m_SoloLock);
++            if (solo)
++                m_SoloQueue.insert(guid);
++            else
++                m_SoloQueue.erase(guid);
++        }
++        [[nodiscard]] bool IsSoloQueue(ObjectGuid guid)
++        {
++            std::lock_guard<std::mutex> lock(m_SoloLock);
++            return m_SoloQueue.count(guid) != 0;
++        }
+ 
+         void SetDungeon(ObjectGuid guid, uint32 dungeon);
+         LFGDungeonData const* GetLFGDungeon(uint32 id);
+@@ -650,6 +669,8 @@ namespace lfg
+         LfgPlayerDataContainer PlayersStore;               ///< Player data
+         LfgGroupDataContainer GroupsStore;                 ///< Group data
+         bool m_Testing;
++        GuidUnorderedSet m_SoloQueue;
++        std::mutex m_SoloLock;
+ 
+         // Dungeon cooldown system - prevents same dungeon being assigned in a row
+         typedef std::unordered_map<uint32 /*dungeonId*/, TimePoint /*completionTime*/> LfgDungeonCooldownMap;
+diff --git a/src/server/game/DungeonFinding/LFGQueue.cpp b/src/server/game/DungeonFinding/LFGQueue.cpp
+index 85f92d1..b2aa1c1 100644
+--- a/src/server/game/DungeonFinding/LFGQueue.cpp
++++ b/src/server/game/DungeonFinding/LFGQueue.cpp
+@@ -293,8 +293,18 @@ namespace lfg
+         if (numLfgGroups > 1)
+             return LFG_INCOMPATIBLES_MULTIPLE_LFG_GROUPS;
+ 
++        // World Journey: a player who goes alone is never put together with others, and needs nobody else.
++        bool solo = false;
++        for (uint8 i = 0; i < 5 && check.guids[i]; ++i)
++            if (sLFGMgr->IsSoloQueue(check.guids[i]))
++            {
++                if (check.size() > 1)
++                    return LFG_INCOMPATIBLES_TOO_MUCH_PLAYERS;
++                solo = true;
++            }
++
+         // Group with less that MAXGROUPSIZE members always compatible
+-        if (!sLFGMgr->IsTesting() && check.size() == 1 && numPlayers < MAXGROUPSIZE)
++        if (!sLFGMgr->IsTesting() && !solo && check.size() == 1 && numPlayers < MAXGROUPSIZE)
+         {
+             LfgQueueDataContainer::iterator itQueue = QueueDataStore.find(check.front());
+             LfgRolesMap roles = itQueue->second.roles;
+@@ -391,7 +401,7 @@ namespace lfg
+         }
+ 
+         // Enough players?
+-        if (!sLFGMgr->IsTesting() && numPlayers != MAXGROUPSIZE)
++        if (!sLFGMgr->IsTesting() && !solo && numPlayers != MAXGROUPSIZE)
+         {
+             strGuids.addRoles(proposalRoles);
+             for (uint8 i = 0; i < 5 && check.guids[i]; ++i)

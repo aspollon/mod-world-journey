@@ -15,6 +15,13 @@
 #include "DBCStores.h"
 #include "DatabaseEnv.h"
 #include "LFGMgr.h"
+#if __has_include("ManastormMgr.h") && __has_include("ManastormModuleConfig.h")
+#define WORLD_JOURNEY_MANASTORM 1
+#include "ManastormMgr.h"
+#include "ManastormModuleConfig.h"
+#else
+#define WORLD_JOURNEY_MANASTORM 0
+#endif
 #include "LocalLevelScaling.h"
 #include "Log.h"
 #include "Map.h"
@@ -850,6 +857,17 @@ public:
         Map* map = creature->FindMap();
         if (!map)
             return;
+#if WORLD_JOURNEY_MANASTORM
+        // A run of Manastorm sets the level of its creatures to its own (the highest level of its group): a dungeon set by
+        // hand does not move them again.
+        if (map->Instanceable() && ManastormModuleConfig::Enabled())
+        {
+            uint8 run = 0;
+            ManastormMgr::Instance().OnBeforeCreatureSelectLevel(creature, run);
+            if (run)
+                return;
+        }
+#endif
         int delta = 0;
         auto instance = mapShift.find(map->GetId());
         if (instance != mapShift.end())

@@ -232,6 +232,46 @@ Journey.Difficulty.Rare.Armor = 1.0
 #    It is created empty; changes take effect at the next start.
 
 ###################################################################################################
+# DUNGEONS ALONE
+###################################################################################################
+
+#
+#    Journey.SoloDungeon.Enable
+#        Description: Players may go into dungeons of the Dungeon Finder alone. The box "Go alone" of
+#                     the addon ZoneLevels in the Dungeon Finder (or .journey solo on|off) chooses it:
+#                     ticked, the Dungeon Finder never puts the player together with others and starts
+#                     his dungeon as soon as it finds one; unticked, it waits for a group of five as
+#                     always. Needs core-solo-dungeon-finder.patch (AFK Realm brings it in).
+#        Default:     0 - Off
+#                     1 - On
+
+Journey.SoloDungeon.Enable = 0
+
+#
+#    Journey.SoloDungeon.Health
+#    Journey.SoloDungeon.Damage
+#    Journey.SoloDungeon.SpellDamage
+#        Description: The creatures of a dungeon entered alone that way: their health, melee damage
+#                     and spell damage, on top of everything else. Other instances of the same
+#                     dungeon keep theirs. Range 0.05-10. (mod-autobalance gives one player about 0.66.)
+#        Default:     0.5, 0.6, 0.6
+
+Journey.SoloDungeon.Health = 0.5
+Journey.SoloDungeon.Damage = 0.6
+Journey.SoloDungeon.SpellDamage = 0.6
+
+#
+#    Journey.SoloDungeon.Boss.Health
+#    Journey.SoloDungeon.Boss.Damage
+#    Journey.SoloDungeon.Boss.SpellDamage
+#        Description: The same for the bosses of such a dungeon.
+#        Default:     0.5, 0.6, 0.6
+
+Journey.SoloDungeon.Boss.Health = 0.5
+Journey.SoloDungeon.Boss.Damage = 0.6
+Journey.SoloDungeon.Boss.SpellDamage = 0.6
+
+###################################################################################################
 # QUESTS
 ###################################################################################################
 

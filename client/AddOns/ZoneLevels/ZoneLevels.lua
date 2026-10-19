@@ -6,6 +6,8 @@
 --   L<id>=<min>-<max>-<recommended>;...   the levels of the Dungeon Finder's dungeons (LFGDungeons.dbc of the
 --                         client still holds the original ones, and the Dungeon Finder hides what it thinks is too high)
 --   D                     the set is complete
+--   S<on><alone>          dungeons alone: whether the realm has them (1/0), and whether this character goes alone (1/0)
+-- The addon tells the server "s1" / "s0" when the box "Go alone" of the Dungeon Finder changes, and once at login.
 -- The last complete set is kept, so the map is right even before the server has spoken.
 
 local PREFIX = "ZoneLevels"
@@ -90,22 +92,72 @@ for _, tooltip in ipairs({ GameTooltip, ItemRefTooltip, ShoppingTooltip1, Shoppi
     end
 end
 
+-- Dungeons alone: a box in the Dungeon Finder. Ticked, the Dungeon Finder starts a dungeon for this character alone as
+-- soon as it finds one (with weaker creatures, as the realm sets it); unticked, it waits for a group of five as always.
+local solo = { available = false, box = nil }
+local SOLO_TEXT = GetLocale() == "deDE" and "Allein gehen" or "Go alone"
+local SOLO_TIP = GetLocale() == "deDE"
+    and "Angehakt startet der Dungeonbrowser deinen Dungeon, sobald er einen für dich allein findet – mit schwächeren Gegnern. Ohne Haken wartet er wie immer auf eine Gruppe von fünf."
+    or "Ticked, the Dungeon Finder starts your dungeon as soon as it finds one for you alone - with weaker creatures. Unticked, it waits for a group of five as always."
+
+local function SoloParent()
+    for _, name in ipairs({ "LFDQueueFrame", "AscensionPVEFrame", "LFDParentFrame", "AscensionLFGFrame" }) do
+        local f = _G[name]
+        if type(f) == "table" and f.GetObjectType then return f end
+    end
+end
+
+local function ShowSoloBox()
+    if not solo.box then
+        local parent = SoloParent()
+        if not parent then return end
+        local box = CreateFrame("CheckButton", "ZoneLevelsSoloBox", parent, "UICheckButtonTemplate")
+        box:SetWidth(24); box:SetHeight(24)
+        box:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -110, -32)
+        box:SetFrameStrata("HIGH")
+        local label = _G["ZoneLevelsSoloBoxText"]
+        if label then label:SetText(SOLO_TEXT) end
+        box:SetScript("OnClick", function(self)
+            ZoneLevelsSolo = self:GetChecked() and true or false
+            SendAddonMessage(PREFIX, ZoneLevelsSolo and "s1" or "s0", "WHISPER", UnitName("player"))
+        end)
+        box:SetScript("OnEnter", function(self)
+            GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+            GameTooltip:SetText(SOLO_TEXT, 1, 1, 1)
+            GameTooltip:AddLine(SOLO_TIP, nil, nil, nil, true)
+            GameTooltip:Show()
+        end)
+        box:SetScript("OnLeave", function() GameTooltip:Hide() end)
+        solo.box = box
+    end
+    solo.box:SetChecked(ZoneLevelsSolo and true or false)
+    if solo.available then solo.box:Show() else solo.box:Hide() end
+end
+
 frame:RegisterEvent("CHAT_MSG_ADDON")
 frame:RegisterEvent("ADDON_LOADED")
 frame:RegisterEvent("PLAYER_ENTERING_WORLD")
 frame:SetScript("OnEvent", function(self, event, prefix, message, channel, sender)
     if event == "ADDON_LOADED" then
         if prefix == PREFIX then Apply(ZoneLevelsDB) end
+        if solo.available then ShowSoloBox() end     -- the Dungeon Finder may come with an addon of its own
         return
     end
     if event == "PLAYER_ENTERING_WORLD" then
         -- Ask once per session: what the server sent at login may have arrived before this addon was loaded.
         self:UnregisterEvent("PLAYER_ENTERING_WORLD")
         SendAddonMessage(PREFIX, "?", "WHISPER", UnitName("player"))
+        SendAddonMessage(PREFIX, ZoneLevelsSolo and "s1" or "s0", "WHISPER", UnitName("player"))
         return
     end
     if prefix ~= PREFIX or type(message) ~= "string" then return end
     local kind, body = message:sub(1, 1), message:sub(2)
+    if kind == "S" then
+        solo.available = body:sub(1, 1) == "1"
+        if solo.available then ZoneLevelsSolo = body:sub(2, 2) == "1" end
+        ShowSoloBox()
+        return
+    end
     if kind == "B" then
         pending = { zones = {}, texts = {}, dungeons = {} }
     elseif not pending then

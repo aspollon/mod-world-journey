@@ -18,6 +18,12 @@
       "target": "core",
       "file": "patches/core-lottery-link.patch",
       "why": "CoA's lottery (mod-coa-lottery, October 2026) misses an include, and the server does not link with Visual Studio. Left out by itself as soon as CoA has the fix."
+    },
+    {
+      "name": "Dungeons alone in the Dungeon Finder",
+      "target": "core",
+      "file": "patches/core-solo-dungeon-finder.patch",
+      "why": "Lets a player choose to go into a dungeon alone (Journey.SoloDungeon.Enable): the Dungeon Finder keeps him apart from the others and starts his dungeon at once. Without the choice it waits for a group of five as always."
     }
   ],
   "settings": [
@@ -89,6 +95,10 @@
     {
       "backup": "journey_spell",
       "source": "spell_dbc"
+    },
+    {
+      "backup": "journey_manastorm_cache",
+      "source": "manastorm_cache_bracket"
     }
   ]
 }

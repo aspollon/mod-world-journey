@@ -60,6 +60,14 @@ originals.
   master of a profession at 40. The class trainers are not touched.
 - **Instances and the Dungeon Finder.** The entry levels of the dungeons, and the Dungeon Finder offers every dungeon -
   Outland's and Northrend's included - from its new entry level to 60.
+- **Dungeons alone** (`Journey.SoloDungeon.Enable`, off by default). A player ticks *Go alone* in the Dungeon Finder
+  (or types `.journey solo on`): the Dungeon Finder never puts him together with others and starts his dungeon as soon
+  as it finds one; unticked, it waits for a group of five as always. In a dungeon entered alone that way - and only
+  there - the creatures get the factors of `Journey.SoloDungeon.*` for health, melee and spell damage, bosses apart.
+  Needs `patches/core-solo-dungeon-finder.patch` (AFK Realm brings it in) and the addon ZoneLevels for the box.
+- **Manastorm** (CoA's endless dungeon). Its caches on the normal track follow the character's level in bands of the
+  old levels; the bands move with the journey, so a cache holds gear for the character's level on the journey. A
+  dungeon set by hand (`Journey.Instance.<map>`) leaves the levels of a Manastorm run alone.
 - **Battlegrounds.** The Eye of the Storm, the Strand of the Ancients, the Isle of Conquest and Wintergrasp open at 60.
 - **Bots.** With mod-playerbots, the random bots stop at 60, hunt in each zone at its new levels - Outland and
   Northrend included - and mount and fly when the players can.

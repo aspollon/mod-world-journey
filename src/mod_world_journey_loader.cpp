@@ -7,8 +7,10 @@
  */
 
 void AddSC_world_journey();
+void AddSC_world_journey_solo();
 
 void Addmod_world_journeyScripts()
 {
     AddSC_world_journey();
+    AddSC_world_journey_solo();
 }

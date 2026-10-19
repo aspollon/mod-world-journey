@@ -2,6 +2,7 @@
 ## Title: Zone Levels
 ## Notes: World Journey: the world map shows the zone levels of the journey, the Dungeon Finder its dungeon levels, gems and enchantments their real values.
 ## Author: mod-world-journey
-## Version: 3
+## Version: 4
 ## SavedVariables: ZoneLevelsDB
+## SavedVariablesPerCharacter: ZoneLevelsSolo
 ZoneLevels.lua
