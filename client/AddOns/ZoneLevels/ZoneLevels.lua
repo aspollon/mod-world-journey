@@ -100,21 +100,42 @@ local SOLO_TIP = GetLocale() == "deDE"
     and "Angehakt startet der Dungeonbrowser deinen Dungeon, sobald er einen für dich allein findet – mit schwächeren Gegnern. Ohne Haken wartet er wie immer auf eine Gruppe von fünf."
     or "Ticked, the Dungeon Finder starts your dungeon as soon as it finds one for you alone - with weaker creatures. Unticked, it waits for a group of five as always."
 
+-- The Dungeon Finder of the client: Conquest of Azeroth brings its own (AscensionLFGFrame) and keeps the stock frames
+-- hidden, so the one that is shown wins, then Ascension's own.
+local SOLO_PARENTS = { "AscensionLFGFrame", "AscensionPVEFrame", "LFDParentFrame", "LFDQueueFrame" }
+
 local function SoloParent()
-    for _, name in ipairs({ "LFDQueueFrame", "AscensionPVEFrame", "LFDParentFrame", "AscensionLFGFrame" }) do
+    local first
+    for _, name in ipairs(SOLO_PARENTS) do
         local f = _G[name]
-        if type(f) == "table" and f.GetObjectType then return f end
+        if type(f) == "table" and f.GetObjectType then
+            if f:IsVisible() then return f end
+            first = first or f
+        end
+    end
+    return first
+end
+
+local ShowSoloBox
+local hooked = {}
+
+local function HookParents()
+    for _, name in ipairs(SOLO_PARENTS) do
+        local f = _G[name]
+        if type(f) == "table" and f.HookScript and not hooked[name] then
+            hooked[name] = true
+            f:HookScript("OnShow", function() if solo.available then ShowSoloBox() end end)
+        end
     end
 end
 
-local function ShowSoloBox()
+ShowSoloBox = function()
+    HookParents()
+    local parent = SoloParent()
+    if not parent then return end
     if not solo.box then
-        local parent = SoloParent()
-        if not parent then return end
         local box = CreateFrame("CheckButton", "ZoneLevelsSoloBox", parent, "UICheckButtonTemplate")
         box:SetWidth(24); box:SetHeight(24)
-        box:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -110, -32)
-        box:SetFrameStrata("HIGH")
         local label = _G["ZoneLevelsSoloBoxText"]
         if label then label:SetText(SOLO_TEXT) end
         box:SetScript("OnClick", function(self)
@@ -129,6 +150,14 @@ local function ShowSoloBox()
         end)
         box:SetScript("OnLeave", function() GameTooltip:Hide() end)
         solo.box = box
+    end
+    if solo.box:GetParent() ~= parent or not solo.box.placed then
+        solo.box:SetParent(parent)
+        solo.box:ClearAllPoints()
+        solo.box:SetPoint("TOPRIGHT", parent, "TOPRIGHT", -110, -32)
+        solo.box:SetFrameStrata("DIALOG")
+        solo.box:SetFrameLevel(parent:GetFrameLevel() + 20)
+        solo.box.placed = true
     end
     solo.box:SetChecked(ZoneLevelsSolo and true or false)
     if solo.available then solo.box:Show() else solo.box:Hide() end
