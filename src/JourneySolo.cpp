@@ -224,7 +224,7 @@ public:
         Map* map = player->GetMap();
         if (!map || !map->IsDungeon())
             return true;
-        LOG_DEBUG("module", "World Journey: {} is in his dungeon alone; the Dungeon Finder does not queue him again", player->GetName());
+        LOG_INFO("module", "World Journey: {} is in his dungeon alone; the Dungeon Finder does not queue him again", player->GetName());
         return false;
 #else
         (void)player;
