@@ -197,7 +197,8 @@ class JourneySoloPlayers : public PlayerScript
 {
 public:
     // At login the addon tells the server the choice it keeps for the character ("s1" / "s0") and gets the answer.
-    JourneySoloPlayers() : PlayerScript("JourneySoloPlayers", { PLAYERHOOK_ON_LOGOUT, PLAYERHOOK_CAN_PLAYER_USE_PRIVATE_CHAT }) { }
+    JourneySoloPlayers() : PlayerScript("JourneySoloPlayers", { PLAYERHOOK_ON_LOGOUT, PLAYERHOOK_CAN_PLAYER_USE_PRIVATE_CHAT,
+        PLAYERHOOK_CAN_JOIN_LFG }) { }
 
     void OnPlayerLogout(Player* player) override
     {
@@ -207,6 +208,27 @@ public:
         }
 #ifdef LFG_SOLO_QUEUE
         sLFGMgr->SetSoloQueue(player->GetGUID(), false);
+#endif
+    }
+
+    /// A dungeon entered alone is the group's dungeon too: a group of one inside it that queues again (the Dungeon Finder
+    /// of the client asks to fill the missing places) would get a second dungeon of its own at once. It stays where it is.
+    bool OnPlayerCanJoinLfg(Player* player, uint8 /*roles*/, lfg::LfgDungeonSet& /*dungeons*/, std::string const& /*comment*/) override
+    {
+#ifdef LFG_SOLO_QUEUE
+        Group* group = player ? player->GetGroup() : nullptr;
+        if (!group || !group->isLFGGroup() || group->GetMembersCount() != 1 || !IsAlone(player))
+            return true;
+        if (sLFGMgr->GetState(group->GetGUID()) != lfg::LFG_STATE_DUNGEON)
+            return true;
+        Map* map = player->GetMap();
+        if (!map || !map->IsDungeon())
+            return true;
+        LOG_DEBUG("module", "World Journey: {} is in his dungeon alone; the Dungeon Finder does not queue him again", player->GetName());
+        return false;
+#else
+        (void)player;
+        return true;
 #endif
     }
 
