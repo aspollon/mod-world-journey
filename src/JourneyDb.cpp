@@ -550,7 +550,10 @@ namespace journey
                 ledger.extras.push_back("s.`spellid_" + std::to_string(i) + "`");                                // 4..8
             for (int i = 1; i <= 5; ++i)
                 ledger.extras.push_back("s.`spelltrigger_" + std::to_string(i) + "`");                           // 9..13
-            ledger.where = "s.`RequiredLevel` > 1 AND s.`Quality` < 7 AND s.`ScalingStatDistribution` = 0";
+            // The CoA Legendary Items variants (9700000-9706399) carry the exact required and item level
+            // the module validates at startup; scaling them disables its drops and powers.
+            ledger.where = "s.`RequiredLevel` > 1 AND s.`Quality` < 7 AND s.`ScalingStatDistribution` = 0 " +
+                "AND NOT (s.`entry` >= 9700000 AND s.`entry` < 9706400)";
             ledger.chunk = 50000;
 
             auto keepMost = [](std::unordered_map<uint32_t, double>& factors, uint32_t id, double factor)
@@ -632,6 +635,16 @@ namespace journey
                     keepMost(outcome.enchantFactors, bonus, statRatio);
                 return next;
             });
+
+            // An older build scaled the CoA Legendary Items variants before they were excluded above.
+            // Put their originals back and forget those ledger rows, so the module's exact levels stay.
+            std::string const legendary = "s.`entry` >= 9700000 AND s.`entry` < 9706400";
+            db.execute("UPDATE " + Quote(ledger.source) + " s JOIN " + Quote(ledger.backup) + " b ON b.`entry` = s.`entry` SET " +
+                List(ledger.columns.size(), [&](size_t i) {
+                    return "s." + Quote(ledger.columns[i].name) + " = b." + Quote("orig_" + ledger.columns[i].name);
+                }) + " WHERE " + legendary);
+            db.execute("DELETE b FROM " + Quote(ledger.backup) + " b JOIN " + Quote(ledger.source) + " s ON b.`entry` = s.`entry` WHERE " + legendary);
+
             for (size_t era = 0; era < endgameSum.size(); ++era)
                 if (endgameCount[era])
                     outcome.endgameRatio[era] = endgameSum[era] / double(endgameCount[era]);
