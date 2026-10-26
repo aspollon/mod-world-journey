@@ -201,8 +201,18 @@ namespace journey
         ItemPlan plan;
         plan.requiredLevel = requiredLevel;
         plan.itemLevel = itemLevel;
-        if (requiredLevel <= 1 || itemLevel <= 0)
+        if (requiredLevel <= 1)
             return plan;
+
+        // A tome, a scroll or another item without an item level still has a required level. Read its game from the
+        // level it asks for and put that on the journey too: on a level-60 realm no item may ask for 70 or 80.
+        if (itemLevel <= 0)
+        {
+            Era const era = EraByLevel(requiredLevel);
+            plan.era = static_cast<ItemEra>(era);
+            plan.requiredLevel = std::min(Compress(requiredLevel, era), shape.endgame);
+            return plan;
+        }
 
         // Which game an item belongs to, by its levels. Outland's items are worth much more than the old world's
         // at the same required level, Northrend's more again; Northrend's leveling gear starts at 68 with item
@@ -219,6 +229,8 @@ namespace journey
         if ((plan.era == ITEM_TBC && !shape.outland) || (plan.era == ITEM_WOTLK && !shape.northrend))
         {
             plan.era = ITEM_KEEP;   // a part left as it came keeps its items as they came
+            // Even a part left out may not ask for a level the realm does not have.
+            plan.requiredLevel = std::min(plan.requiredLevel, shape.endgame);
             return plan;
         }
 

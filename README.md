@@ -46,7 +46,9 @@ originals.
 - **Items.** Required level, item level, stats, armor, weapon damage and price. The level an item of Outland or
   Northrend was made for is read from its item level, and its stats become those of an item of its new level (stat
   budgets from the server's `dbc/RandPropPoints.dbc`). This happens in `item_template` itself, so it holds for every
-  source of an item: loot, quests, vendors, the Trading Post, the auction house.
+  source of an item: loot, quests, vendors, the Trading Post, the auction house. Every required level is put on the
+  journey, including items without an item level (tomes, scrolls) and items with scaling stats; no item asks for a
+  level above `Journey.Endgame.Level`.
 - **The end of the journey** is a ladder at 60, the way the games followed each other: the raids of the old world
   (item levels 66 to 92), then Outland's (75 to 110), then Northrend's (95 to 140) - both configurable. The raids and
   heroics of Outland and Northrend keep the stronger base stats of their game: they are the harder end.
@@ -55,7 +57,8 @@ originals.
 - **Gems and enchantments** of Outland and Northrend - from gems, socket bonuses, enchanting scrolls and the other
   professions - by what the top rewards of their game keep of their stats. The level an enchantment asks for moves with
   its part of the world (a gem of Northrend that asked for 80 asks for 60, one of Outland that asked for 70 for 47 with
-  the default ranges); what the gem or scroll itself asks for is the item's, so an epic gem of a raid stays at 60.
+  the default ranges); what the gem or scroll itself asks for is the item's, so an epic gem of a raid stays at 60. The
+  client's `SpellItemEnchantment.dbc` is patched so no gem or enchantment asks for more than the endgame level either.
 - **Riding and the professions.** Riding at 13 and 26, flying at 33 and 47, cold weather flying at 55, the grand
   master of a profession at 40. The class trainers are not touched.
 - **Instances and the Dungeon Finder.** The entry levels of the dungeons, and the Dungeon Finder offers every dungeon -

@@ -552,7 +552,7 @@ namespace journey
                 ledger.extras.push_back("s.`spelltrigger_" + std::to_string(i) + "`");                           // 9..13
             // The CoA Legendary Items variants (9700000-9706399) carry the exact required and item level
             // the module validates at startup; scaling them disables its drops and powers.
-            ledger.where = "s.`RequiredLevel` > 1 AND s.`Quality` < 7 AND s.`ScalingStatDistribution` = 0 "
+            ledger.where = "s.`RequiredLevel` > 1 "
                 "AND NOT (s.`entry` >= 9700000 AND s.`entry` < 9706400)";
             ledger.chunk = 50000;
 
@@ -577,11 +577,12 @@ namespace journey
                 bool const equipment = itemClass == 2 /* weapon */ || itemClass == 4 /* armor */;
 
                 ItemPlan const plan = PlanItem(quality, required, itemLevel);
+                bool const kept = plan.era == ITEM_KEEP;
                 double statRatio = 1.0, spellRatio = 1.0;
-                if (plan.era != ITEM_KEEP && (plan.requiredLevel != required || plan.itemLevel != itemLevel))
+                if (plan.requiredLevel != required || plan.itemLevel != itemLevel)
                 {
                     next[0] = plan.requiredLevel;
-                    if (equipment && itemLevel > 0)
+                    if (!kept && equipment && itemLevel > 0)
                     {
                         next[1] = plan.itemLevel;
                         double const linear = double(plan.itemLevel) / double(itemLevel);
@@ -612,7 +613,7 @@ namespace journey
                             ++endgameCount[plan.era];
                         }
                     }
-                    else if (settings.consumables)
+                    else if (!kept && settings.consumables)
                     {
                         double const before = worth.At(required, ExpansionOf(plan.era)), after = worth.At(plan.requiredLevel, 0);
                         if (before > 0.0 && after > 0.0)
