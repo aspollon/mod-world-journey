@@ -48,7 +48,8 @@ originals.
   budgets from the server's `dbc/RandPropPoints.dbc`). This happens in `item_template` itself, so it holds for every
   source of an item: loot, quests, vendors, the Trading Post, the auction house. Every required level is put on the
   journey, including items without an item level (tomes, scrolls) and items with scaling stats; no item asks for a
-  level above `Journey.Endgame.Level`.
+  level above `Journey.Endgame.Level`. The saved historical level-61-to-80 variants of CoA Legendary Items are left
+  alone; they have no client rows and cannot be used on the journey.
 - **The end of the journey** is a ladder at 60, the way the games followed each other: the raids of the old world
   (item levels 66 to 92), then Outland's (75 to 110), then Northrend's (95 to 140) - both configurable. The raids and
   heroics of Outland and Northrend keep the stronger base stats of their game: they are the harder end.
