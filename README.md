@@ -146,7 +146,7 @@ The first start with the module takes about a minute longer than usual; later st
 
 ## Requirements
 
-- AzerothCore with the Conquest of Azeroth changes (`jealous-sound/azerothcore-wotlk-coa`).
+- AzerothCore with the Conquest of Azeroth changes (`Conquest-of-AzerothCore/azerothcore-wotlk-coa`).
 - Optional: mod-playerbots (CoA branch) with `patches/playerbots-world-journey.patch`.
 
 ## Installation
