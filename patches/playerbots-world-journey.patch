@@ -41,7 +41,7 @@ index 3df4c40d..dc1fe1e0 100644
  
  void TravelMgr::PrepareDestinationCache()
 diff --git a/src/PlayerbotAIConfig.cpp b/src/PlayerbotAIConfig.cpp
-index 3a8af8a8..3586d2f6 100644
+index 21e94e70..fa142b85 100644
 --- a/src/PlayerbotAIConfig.cpp
 +++ b/src/PlayerbotAIConfig.cpp
 @@ -18,10 +18,28 @@
@@ -73,7 +73,7 @@ index 3a8af8a8..3586d2f6 100644
  template <class T>
  void LoadList(std::string const value, T& list)
  {
-@@ -420,6 +438,13 @@ bool PlayerbotAIConfig::Initialize()
+@@ -435,6 +453,13 @@ bool PlayerbotAIConfig::Initialize()
                   randomBotMaxLevel, sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL), sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL));
          randomBotMaxLevel = sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL);
      }
@@ -87,7 +87,7 @@ index 3a8af8a8..3586d2f6 100644
  
      // Bracket defaults (below) derive from randomBotMaxLevel, so this must run after it is read.
      LoadRandomBotLevelConfig();
-@@ -481,6 +506,18 @@ bool PlayerbotAIConfig::Initialize()
+@@ -497,6 +522,18 @@ bool PlayerbotAIConfig::Initialize()
      useFastGroundMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFastGroundMountAtMinLevel", 40);
      useFlyMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFlyMountAtMinLevel", 60);
      useFastFlyMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFastFlyMountAtMinLevel", 70);
