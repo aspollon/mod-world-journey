@@ -1,5 +1,5 @@
 diff --git a/src/Mgr/Travel/TravelMgr.cpp b/src/Mgr/Travel/TravelMgr.cpp
-index 3df4c40d..dc1fe1e0 100644
+index ed0ed57a..d8139f07 100644
 --- a/src/Mgr/Travel/TravelMgr.cpp
 +++ b/src/Mgr/Travel/TravelMgr.cpp
 @@ -5,6 +5,7 @@
@@ -10,7 +10,7 @@ index 3df4c40d..dc1fe1e0 100644
  #include "AreaDefines.h"
  #include "CellImpl.h"
  #include "ChatHelper.h"
-@@ -4643,6 +4644,19 @@ void TravelMgr::PrepareZone2LevelBracket()
+@@ -4646,6 +4647,19 @@ void TravelMgr::PrepareZone2LevelBracket()
      for (auto const& [zoneId, bracketPair] : sPlayerbotAIConfig.zoneBrackets)
          zone2LevelBracket[zoneId] = {bracketPair.first, bracketPair.second};
  
@@ -30,7 +30,7 @@ index 3df4c40d..dc1fe1e0 100644
      // A realm whose bots stop at 60 (Conquest of Azeroth) has no Burning Crusade or Wrath content to send them
      // to, whatever an older playerbots.conf says: level 58-60 bots were teleported to Hellfire Peninsula and
      // Zangarmarsh (Zyth45/mod-playerbots#14). The Blood Elf and Draenei zones stay.
-@@ -4652,7 +4666,8 @@ void TravelMgr::PrepareZone2LevelBracket()
+@@ -4655,7 +4669,8 @@ void TravelMgr::PrepareZone2LevelBracket()
                                AREA_DRAGONBLIGHT, AREA_ZUL_DRAK, AREA_THE_STORM_PEAKS, 210u, AREA_GRIZZLY_HILLS,
                                AREA_HOWLING_FJORD, AREA_CRYSTALSONG_FOREST, AREA_BOREAN_TUNDRA, AREA_SHOLAZAR_BASIN,
                                AREA_WINTERGRASP})
@@ -41,14 +41,15 @@ index 3df4c40d..dc1fe1e0 100644
  
  void TravelMgr::PrepareDestinationCache()
 diff --git a/src/PlayerbotAIConfig.cpp b/src/PlayerbotAIConfig.cpp
-index 21e94e70..fa142b85 100644
+index 2001d315..628c6208 100644
 --- a/src/PlayerbotAIConfig.cpp
 +++ b/src/PlayerbotAIConfig.cpp
-@@ -18,10 +18,28 @@
+@@ -19,11 +19,29 @@
  #include "RandomPlayerbotMgr.h"
  #include "Talentspec.h"
  #include "TravelMgr.h"
 +#include "DatabaseEnv.h"
+ #include <algorithm>
  #include <cctype>
 +#include <map>
  #include <iostream>
@@ -73,7 +74,7 @@ index 21e94e70..fa142b85 100644
  template <class T>
  void LoadList(std::string const value, T& list)
  {
-@@ -435,6 +453,13 @@ bool PlayerbotAIConfig::Initialize()
+@@ -437,6 +455,13 @@ bool PlayerbotAIConfig::Initialize()
                   randomBotMaxLevel, sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL), sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL));
          randomBotMaxLevel = sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL);
      }
@@ -87,7 +88,7 @@ index 21e94e70..fa142b85 100644
  
      // Bracket defaults (below) derive from randomBotMaxLevel, so this must run after it is read.
      LoadRandomBotLevelConfig();
-@@ -497,6 +522,18 @@ bool PlayerbotAIConfig::Initialize()
+@@ -499,6 +524,18 @@ bool PlayerbotAIConfig::Initialize()
      useFastGroundMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFastGroundMountAtMinLevel", 40);
      useFlyMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFlyMountAtMinLevel", 60);
      useFastFlyMountAtMinLevel = sConfigMgr->GetOption<int32>("AiPlayerbot.UseFastFlyMountAtMinLevel", 70);
