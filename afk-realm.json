@@ -17,6 +17,7 @@
       "name": "CoA's lottery links on Windows",
       "target": "core",
       "file": "patches/core-lottery-link.patch",
+      "notNeededWhen": "modules/mod-coa-lottery/src/CoALottery.cpp|#include \"CellImpl.h\"",
       "why": "CoA's lottery (mod-coa-lottery, October 2026) misses an include, and the server does not link with Visual Studio. Left out by itself as soon as CoA has the fix."
     },
     {
