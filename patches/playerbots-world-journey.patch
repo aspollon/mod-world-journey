@@ -44,8 +44,9 @@ diff --git a/src/PlayerbotAIConfig.cpp b/src/PlayerbotAIConfig.cpp
 index 2001d315..628c6208 100644
 --- a/src/PlayerbotAIConfig.cpp
 +++ b/src/PlayerbotAIConfig.cpp
-@@ -19,11 +19,29 @@
+@@ -20,12 +20,30 @@
  #include "RandomPlayerbotMgr.h"
+ #include "StringConvert.h"
  #include "Talentspec.h"
  #include "TravelMgr.h"
 +#include "DatabaseEnv.h"
