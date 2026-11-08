@@ -72,6 +72,10 @@ originals.
 - **Manastorm** (CoA's endless dungeon). Its caches on the normal track follow the character's level in bands of the
   old levels; the bands move with the journey, so a cache holds gear for the character's level on the journey. A
   dungeon set by hand (`Journey.Instance.<map>`) leaves the levels of a Manastorm run alone.
+- **Call Board caches** (CoA). The cache the progress bar pays is chosen by the best average item level a character
+  has worn; its thresholds and the item levels of the cache rewards move down with the journey's gear, so the
+  Heroic, Mythic and Zul'Gurub caches come at the end of the old world (about 38) instead of at 60. The caches of the
+  old raids (Molten Core onwards) stay at 60 with the raids.
 - **Battlegrounds.** The Eye of the Storm, the Strand of the Ancients, the Isle of Conquest and Wintergrasp open at 60.
 - **Bots.** With mod-playerbots, the random bots stop at 60, hunt in each zone at its new levels - Outland and
   Northrend included - and mount and fly when the players can.

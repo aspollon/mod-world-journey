@@ -739,6 +739,112 @@ namespace journey
             Report(db, settings, tally, "Manastorm cache bands");
         }
 
+        bool TableExists(Db const& db, char const* name)
+        {
+            bool present = false;
+            db.query(std::string("SELECT COUNT(*) FROM information_schema.TABLES WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = '") + name + "'",
+                [&](Row const& row) { present = Int(row[0]) > 0; });
+            return present;
+        }
+
+        /// The Call Board caches of CoA. Which cache the progress bar pays is chosen by the highest average item level a
+        /// character has worn (ascension_callboard_cache_tier: 40, 55, 60 ...), and what a cache holds by the item levels of
+        /// its rewards (ascension_callboard_cache_reward). Both are the old item levels; the journey has moved the gear of
+        /// the old world's dungeons down with the levels, so a character at the end of the old world (about 38) never
+        /// reached the thresholds and got the better caches only at 60 - full of gear for 38. The rewards take the item
+        /// level their item has on the journey, and each threshold moves down as far as the lowest reward of its cache did:
+        /// the raids of the old world stay at 60, and so do their caches.
+        void CallboardCaches(Db const& db, Settings const& settings)
+        {
+            if (!TableExists(db, "ascension_callboard_cache_reward") || !TableExists(db, "ascension_callboard_cache_tier"))
+                return;
+            bool const on = settings.enabled && settings.items;
+            std::string const items = settings.prefix + "_item";
+            bool const itemLedger = TableExists(db, items.c_str());
+
+            // what the lowest reward of each cache was, and what it is on the journey
+            std::map<uint32_t, std::pair<int, int>> lowest;    // cache -> (original, journey)
+            Ledger rewards;
+            rewards.source = "ascension_callboard_cache_reward";
+            rewards.backup = settings.prefix + "_callboard_reward";
+            rewards.comment = "The original item levels of the Call Board cache rewards, and what the journey made of them";
+            rewards.keys = { "CacheItemId", "RewardItemId" };
+            rewards.columns = { { "RewardItemLevel" } };
+            if (itemLedger)
+            {
+                rewards.join = "LEFT JOIN `" + items + "` bi ON bi.`entry` = s.`RewardItemId`";
+                rewards.extras = { "bi.`orig_ItemLevel`", "bi.`applied_ItemLevel`" };
+            }
+            Tally const rewardTally = Keep(db, rewards, [&](Entry const& entry)
+            {
+                std::vector<double> next = entry.orig;
+                int const original = int(entry.orig[0]);
+                if (on && itemLedger && entry.extra.size() >= 2 && !entry.extra[0].empty())
+                {
+                    double const from = Number(entry.extra[0]), to = Number(entry.extra[1]);
+                    if (from > 0 && to > 0 && to < from)
+                        next[0] = std::max(1.0, std::round(original * to / from));
+                }
+                auto& f = lowest.try_emplace(uint32_t(Int(entry.keys[0])), original, int(next[0])).first->second;
+                f.first = std::min(f.first, original);
+                f.second = std::min(f.second, int(next[0]));
+                return next;
+            });
+            Report(db, settings, rewardTally, "Call Board cache rewards");
+
+            // the thresholds in their original order; ItemLevel is the table's key, so a moved threshold may never meet
+            // another one's original (the rows are written in one statement, and written back the same way)
+            std::string const tierBackup = settings.prefix + "_callboard_tier";
+            std::vector<std::pair<uint32_t, int>> tiers;         // cache, original threshold
+            std::map<uint32_t, int> current;                     // cache, the threshold the table holds now
+            bool const backedUp = TableExists(db, tierBackup.c_str());
+            db.query(backedUp
+                ? "SELECT s.`CacheItemId`, COALESCE(b.`orig_ItemLevel`, s.`ItemLevel`), s.`ItemLevel` FROM `ascension_callboard_cache_tier` s "
+                  "LEFT JOIN `" + tierBackup + "` b ON b.`CacheItemId` = s.`CacheItemId`"
+                : std::string("SELECT `CacheItemId`, `ItemLevel`, `ItemLevel` FROM `ascension_callboard_cache_tier`"),
+                [&](Row const& row)
+                {
+                    tiers.emplace_back(uint32_t(Int(row[0])), int(Int(row[1])));
+                    current[uint32_t(Int(row[0]))] = int(Int(row[2]));
+                });
+            std::sort(tiers.begin(), tiers.end(), [](auto const& a, auto const& b) { return a.second < b.second; });
+            std::set<int> taken;                                 // every original and every value held now
+            for (auto const& t : tiers)
+                taken.insert(t.second);
+            for (auto const& c : current)
+                taken.insert(c.second);
+            std::map<uint32_t, int> moved;
+            int previous = -1;
+            for (auto const& [cache, original] : tiers)
+            {
+                int target = original;
+                auto f = lowest.find(cache);
+                if (on && original > 0 && f != lowest.end())
+                    target = original - std::max(0, f->second.first - f->second.second);
+                target = std::clamp(target, previous + 1, std::max(original, previous + 1));
+                while (target < original && taken.count(target) && target != current[cache])
+                    ++target;
+                moved[cache] = target;
+                previous = target;
+            }
+
+            Ledger thresholds;
+            thresholds.source = "ascension_callboard_cache_tier";
+            thresholds.backup = tierBackup;
+            thresholds.comment = "The original item level thresholds of the Call Board caches, and what the journey made of them";
+            thresholds.keys = { "CacheItemId" };
+            thresholds.columns = { { "ItemLevel" } };
+            Tally const tierTally = Keep(db, thresholds, [&](Entry const& entry)
+            {
+                std::vector<double> next = entry.orig;
+                auto m = moved.find(uint32_t(Int(entry.keys[0])));
+                if (m != moved.end())
+                    next[0] = m->second;
+                return next;
+            });
+            Report(db, settings, tierTally, "Call Board cache thresholds");
+        }
+
         /// The enchantments the professions teach beyond the old world: which game they belong to, by the skill.
         void Crafts(Db const& db, Outcome& outcome)
         {
@@ -1065,6 +1171,7 @@ namespace journey
         Trainers(db, settings);
         Battlegrounds(db, settings);
         ManastormCaches(db, settings);
+        CallboardCaches(db, settings);
         if (settings.enabled && settings.enchantments)
             Crafts(db, outcome);
         Spells(db, settings, spellDbc, outcome);
