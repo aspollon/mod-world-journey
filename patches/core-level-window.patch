@@ -1,5 +1,5 @@
 diff --git a/modules/mod-destiny-weaver/src/destiny_weaver.cpp b/modules/mod-destiny-weaver/src/destiny_weaver.cpp
-index d7a0c934..8a5c5486 100644
+index d7a0c9340..8a5c54866 100644
 --- a/modules/mod-destiny-weaver/src/destiny_weaver.cpp
 +++ b/modules/mod-destiny-weaver/src/destiny_weaver.cpp
 @@ -40,6 +40,7 @@
@@ -36,10 +36,10 @@ index d7a0c934..8a5c5486 100644
          SendGossipMenuFor(player, GOSSIP_TEXT_GREETING, creature);
      }
 diff --git a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
-index f3c21ed8..0e7cebaa 100644
+index 679e529bf..b59f6d0bb 100644
 --- a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
 +++ b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
-@@ -210,6 +210,18 @@ namespace
+@@ -213,6 +213,18 @@ namespace
                  itr->second = LocalLevelScaling::MergeBands(itr->second, band);
          }
  
@@ -58,7 +58,7 @@ index f3c21ed8..0e7cebaa 100644
          LOG_INFO("module.destiny_weaver", "creature scaling covers {} open-world map(s) and {} dungeon map(s)",
                   scope->WorldMaps.size(), scope->DungeonBands.size());
  
-@@ -432,6 +444,11 @@ namespace
+@@ -460,6 +472,11 @@ namespace
              // nothing, because there is nobody else for a high view to be wrong for.
              uint8 const offset = LocalLevelScaling::CreatureOffset.load(std::memory_order_relaxed);
              level = LocalLevelScaling::ScaleCreatureLevelForViewer(own, viewer->GetLevel(), offset);
@@ -69,9 +69,9 @@ index f3c21ed8..0e7cebaa 100644
 +                    level = placed;
          }
  
-         if (level == own)
+         if (level == own && !personalInstance)
 diff --git a/src/server/game/Miscellaneous/LocalLevelScaling.h b/src/server/game/Miscellaneous/LocalLevelScaling.h
-index 3d5088f4..e43e894a 100644
+index 1748898cf..54aa18f80 100644
 --- a/src/server/game/Miscellaneous/LocalLevelScaling.h
 +++ b/src/server/game/Miscellaneous/LocalLevelScaling.h
 @@ -14,6 +14,7 @@
@@ -81,8 +81,8 @@ index 3d5088f4..e43e894a 100644
 +#include <vector>
  
  class Creature;
- class Item;
-@@ -40,12 +41,23 @@ inline std::atomic<bool> QuestClientScalingFlag{false};
+ class Map;
+@@ -54,12 +55,23 @@ inline std::atomic<bool> QuestClientScalingFlag{false};
  using QuestScalingResolver = bool (*)(Player const*);
  inline std::atomic<QuestScalingResolver> QuestScalingOwner{nullptr};
  
@@ -106,7 +106,7 @@ index 3d5088f4..e43e894a 100644
      return owner && owner(player);
  }
  
-@@ -315,6 +327,12 @@ inline LevelBand MergeBands(LevelBand a, LevelBand b)
+@@ -342,6 +354,12 @@ inline LevelBand MergeBands(LevelBand a, LevelBand b)
      return { std::min(a.Low, b.Low), std::max(a.High, b.High) };
  }
  
