@@ -10,6 +10,7 @@
 #include "JourneyDb.h"
 
 #include "Chat.h"
+#include "ConditionMgr.h"
 #include "Config.h"
 #include "Creature.h"
 #include "DBCStores.h"
@@ -554,6 +555,26 @@ namespace
         Say(std::to_string(changed) + " instance(s) can be entered at their new levels");
     }
 
+    /// The capital portals to the Blasted Lands (the way to the Dark Portal) ask for 58 in the conditions table:
+    /// on the journey they open at the level Outland starts.
+    void SetPortalLevels()
+    {
+        int const top = int(std::min<uint32>(sWorld->getIntConfig(CONFIG_MAX_PLAYER_LEVEL), 60));
+        uint32 changed = 0;
+        for (uint32 spell : { 65728u, 65729u })
+            for (Condition* condition : sConditionMgr->GetConditionsForNotGroupedEntry(CONDITION_SOURCE_TYPE_SPELL, spell))
+                if (condition->ConditionType == CONDITION_LEVEL && condition->ConditionValue1 >= 58)
+                {
+                    uint32 const now = uint32(std::clamp(journey::Compress(int(condition->ConditionValue1), journey::ERA_OUTLAND), 1, top));
+                    if (now != condition->ConditionValue1)
+                    {
+                        condition->ConditionValue1 = now;
+                        ++changed;
+                    }
+                }
+        Say(std::to_string(changed) + " Blasted Lands portal(s) open at the start of Outland");
+    }
+
     /// The Dungeon Finder offers every dungeon from its new entry level to 60; a random dungeon from the lowest
     /// entry among the dungeons it draws from.
     /// The level a dungeon is meant for, a few levels above its entry as it was before the journey (the journey
@@ -816,6 +837,7 @@ public:
             return;
         RescaleSpellsAndEnchants();
         SetInstanceEntries();
+        SetPortalLevels();
         SetDungeonFinder();
         if (runtime.battlegrounds)
             SetBattlegroundBrackets();

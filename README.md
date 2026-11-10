@@ -64,6 +64,7 @@ originals.
   master of a profession at 40. The class trainers are not touched.
 - **Instances and the Dungeon Finder.** The entry levels of the dungeons, and the Dungeon Finder offers every dungeon -
   Outland's and Northrend's included - from its new entry level to 60.
+- **The way to Outland.** The capital portals to the Blasted Lands open at the level Outland starts instead of 58.
 - **Dungeons alone** (`Journey.SoloDungeon.Enable`, off by default). A player ticks *Go alone* in the Dungeon Finder
   (or types `.journey solo on`): the Dungeon Finder never puts him together with others and starts his dungeon as soon
   as it finds one; unticked, it waits for a group of five as always. In a dungeon entered alone that way - and only
