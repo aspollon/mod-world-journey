@@ -36,7 +36,7 @@ index d7a0c9340..8a5c54866 100644
          SendGossipMenuFor(player, GOSSIP_TEXT_GREETING, creature);
      }
 diff --git a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
-index 679e529bf..b59f6d0bb 100644
+index a00b2b16b..6c4f5d3a9 100644
 --- a/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
 +++ b/modules/mod-destiny-weaver/src/destiny_weaver_scaling.cpp
 @@ -213,6 +213,18 @@ namespace
@@ -58,10 +58,10 @@ index 679e529bf..b59f6d0bb 100644
          LOG_INFO("module.destiny_weaver", "creature scaling covers {} open-world map(s) and {} dungeon map(s)",
                   scope->WorldMaps.size(), scope->DungeonBands.size());
  
-@@ -460,6 +472,11 @@ namespace
-             // nothing, because there is nobody else for a high view to be wrong for.
+@@ -467,6 +479,11 @@ namespace
              uint8 const offset = LocalLevelScaling::CreatureOffset.load(std::memory_order_relaxed);
-             level = LocalLevelScaling::ScaleCreatureLevelForViewer(own, viewer->GetLevel(), offset);
+             level = IsTrainingDummy(creature) ? std::max(own, viewer->GetLevel()) :
+                 LocalLevelScaling::ScaleCreatureLevelForViewer(own, viewer->GetLevel(), offset);
 +            // A window around the viewer may place the creature instead (World Journey).
 +            if (LocalLevelScaling::CreatureWindowResolver const window =
 +                    LocalLevelScaling::CreatureWindowOwner.load(std::memory_order_relaxed))
